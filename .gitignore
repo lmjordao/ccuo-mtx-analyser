@@ -1,0 +1,8 @@
+# Default ignored files
+
+*.7z
+
+.idea/*
+__pycache__
+build/*
+venv/*

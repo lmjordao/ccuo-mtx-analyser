@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created 2020-04-23 16:10:28 by acristin on BTIS1000096002 using MTPE-5.3.0.1 -->
+<!-- File: C:/Users/acristin/Workspaces/EastAnglia R1.1.8/PAD_P_EAA/MTPE/components/PAD_P_EAA/PAD_P_UserIfCfg.mtx -->
+<pou name="PAD_P_UserIfCfg" version="1.0.0.0" type="ST" sub-type="Program" user-build="0">
+ <iec-data><![CDATA[(*@PROPERTIES_EX@
+TYPE: POU
+LOCALE: 0
+IEC_LANGUAGE: ST
+PLC_TYPE: PowerPC
+PROC_TYPE: independent
+GROUP: CCUO.PAD.PAD_F_Aventra.Config
+*)
+(*@KEY@:DESCRIPTION*)
+------------------------------------------------------------------------------------
+COPYRIGHT       :  (c) 2017 Bombardier Inc. or its subsidiaries. All rights reserved.
+------------------------------------------------------------------------------------
+
+name            :      PAD_P_UserIfCfg
+category        :      Program POU PAD family
+
+revision log    :
+version   : prepared   : creator (dept.)                : action (short)
+1.0.0.3	  : 2020-04-16 : Armando Cristino (RoQ/TPD)		: Defect 457608: Changed value of PEnCabActOpt to FALSE
+1.0.0.2	  : 2019-02-25 : Armando Cristino (RoQ/TPD)		: FR 28763 - Set configuration parameter so that CabActive is not taken into consideration in the closing door command. 
+1.0.0.1	  : 2017-11-27 : Peter Schenk (RoQ/TPD			: correction of missing and doubled data
+1.0.0.0   : 2017-02-27 : slemke (RoQ)                   : first issue
+
+description:
+project specific values for config parameters for consist component for PAD
+for not changed values input init (input) shall be written to the output without change.
+
+
+* REMARKS : ANY CHANGES MADE TO THIS FILE WILL BE LOST WHEN RE-GENERATING IT!!! *
+
+Created with : Configuration generator Version: 1.3.0.0 From: 2016-02-26
+(*@KEY@:END_DESCRIPTION*)
+PROGRAM PAD_P_UserIfCfg
+
+(*Group:OUT*)
+
+
+VAR_OUTPUT
+	CFG_PadUserIf :	PadGUserIfCfg;(*configuration information for the UserIf*)
+END_VAR
+
+
+(*@KEY@: WORKSHEET
+NAME: PAD_P_UserIfCfg
+IEC_LANGUAGE: ST
+*)
+(* init parameters *)
+CFG_PadUserIf.EnClsDrv := TRUE;
+CFG_PadUserIf.EnClsCnd := FALSE;
+CFG_PadUserIf.EnDiRelCnd := FALSE;
+CFG_PadUserIf.EnDiRelDrv := FALSE;
+CFG_PadUserIf.EnOpnCnd := FALSE;
+CFG_PadUserIf.EnOpnDrv := TRUE;
+CFG_PadUserIf.EnRelCnd := FALSE;
+CFG_PadUserIf.EnRelDrv := TRUE;
+CFG_PadUserIf.EnSideSelectCnd := FALSE;
+CFG_PadUserIf.EnSideSelectDrv := TRUE;
+CFG_PadUserIf.PClsCmdTMax := t#60s;
+CFG_PadUserIf.PClsCmdTPls := t#2s;
+CFG_PadUserIf.PDiRelCmdTMax := t#60s;
+CFG_PadUserIf.PDiRelCmdTPls := t#2s;
+CFG_PadUserIf.PLckFrCmdTMax := t#60s;
+CFG_PadUserIf.PLckFrCmdTPls := t#2s;
+CFG_PadUserIf.PLckLstCmdTMax := t#60s;
+CFG_PadUserIf.PLckLstCmdTPls := t#2s;
+CFG_PadUserIf.POpnCmdTMax := t#60s;
+CFG_PadUserIf.POpnCmdTPls := t#2s;
+CFG_PadUserIf.PRelCmdTMax := t#60s;
+CFG_PadUserIf.PRelCmdTPls := t#2s;
+CFG_PadUserIf.PSideSelectTMax := t#60s;
+CFG_PadUserIf.PSideSelectTPls := t#2s;
+CFG_PadUserIf.PDrvIfExists := WORD#16#3;
+CFG_PadUserIf.PCndIfExists := WORD#16#1;
+CFG_PadUserIf.PEnCabActOpt := FALSE;
+(*@KEY@: END_WORKSHEET *)
+END_PROGRAM
+]]></iec-data>
+ <interface>
+  <variable-group name="OUT">
+   <variable name="CFG_PadUserIf" array-size="1" type="PadGUserIfCfg" usage="output">
+    <comment><![CDATA[configuration information for the UserIf]]></comment>
+   </variable>
+  </variable-group>
+ </interface>
+</pou>
