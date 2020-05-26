@@ -4,6 +4,8 @@
 import os
 import xlsxwriter as xlsxwriter
 
+from data_model import DataModel
+
 
 class XLSXExporter:
 
@@ -54,3 +56,45 @@ class XLSXExporter:
 
     def save(self):
         self.workbook.close()
+
+    def export_connection_set(self, connection_set, sheet_name):
+
+        worksheet = self.workbook.add_worksheet(sheet_name)
+        worksheet.write(0, 0, 'Var Group:')
+        worksheet.write(0, 1, 'Var:')
+        worksheet.write(0, 2, 'Connected to:')
+        row = 1
+        for _var_group_key in connection_set.keys():
+            for _var_key in connection_set[_var_group_key].keys():
+                col = 0
+                worksheet.write(row, col, _var_group_key)
+                col = col + 1
+                worksheet.write(row, col, _var_key)
+
+                for _filename in connection_set[_var_group_key][_var_key]:
+                    col = col + 1
+                    worksheet.write(row, col, _filename)
+                row += 1
+
+    def export_connections_to_component(self, connection_set, sheet_name):
+        worksheet = self.workbook.add_worksheet(sheet_name)
+        worksheet.write(0, 0, 'filename:')
+        worksheet.write(0, 1, 'Output Signal:')
+        worksheet.write(0, 2, 'Connection count:')
+        worksheet.write(0, 3, 'Found In:')
+        row = 1
+        for _filename in connection_set.keys():
+            for _var_group_key in connection_set[_filename].keys():
+                for _var_key in connection_set[_filename][_var_group_key].keys():
+                    col = 0
+                    worksheet.write(row, col, _filename)
+                    col = col + 1
+                    worksheet.write(row, col, _var_key)
+                    col = col + 1
+                    worksheet.write(row, col, len(connection_set[_filename][_var_group_key][_var_key]))
+
+                    col = col + 1
+                    # for _conn in connection_set[_filename][_var_group_key][_var_key]:
+                    conn_list_as_str = '[' + ', '.join(connection_set[_filename][_var_group_key][_var_key]) + ']'
+                    worksheet.write(row, col, conn_list_as_str)
+                    row += 1
