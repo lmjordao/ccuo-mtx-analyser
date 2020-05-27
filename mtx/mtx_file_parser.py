@@ -1,8 +1,12 @@
 """
 mtx file parser
 """
+import io
+
 import xml.dom.minidom
 from xml.parsers.expat import ExpatError
+from lxml import etree
+import re
 
 
 class MtxFileParser:
@@ -15,7 +19,7 @@ class MtxFileParser:
         self.variable_set = None
         self.variable_dict = None
 
-        self.parsed = self.load_file(filename)
+        self.corrected = self.load_file_v2(filename)
 
     def get_component_name(self):
         return self.filename.split('/')[-2]
@@ -23,17 +27,55 @@ class MtxFileParser:
     def get_filename(self):
         return self.filename.split('\\')[-1]
 
+    def load_file_v2(self, filename):
+        # print("Parsing file: ", filename)
+        corrected = False
+        try:
+            self._dom = xml.dom.minidom.parse(filename)
+        except ExpatError:
+            # If Illegal chars have been found within XML file
+            # they will be replaced with '', in order to ensure that the file is parsed
+            escape_illegal_xml_characters = \
+                lambda x: re.sub(u'[\x00-\x08\x0b\x0c\x0e-\x1F\uD800-\uDFFF\uFFFE\uFFFF]', '', x)
+            with io.open(filename, 'r') as f:
+                contents = f.read()
+                contents = escape_illegal_xml_characters(contents)
+
+                try:
+                    self._dom = xml.dom.minidom.parseString(contents)
+                except ExpatError:
+                    # TODO: Generate a warning to the user if we ever get here
+                    self._dom = self._dom = xml.dom.minidom.parse("empty.xml")
+
+            corrected = True
+        return corrected
+
+
+    """
+    def __apply_corrective_action(self):
+        RE_XML_ILLEGAL = u'([\u0000-\u0008\u000b-\u000c\u000e-\u001f\ufffe-\uffff])' + \
+                         u'|' + \
+                         u'([%s-%s][^%s-%s])|([^%s-%s][%s-%s])|([%s-%s]$)|(^[%s-%s])' % \
+                         (unichr(0xd800), unichr(0xdbff), unichr(0xdc00), unichr(0xdfff),
+                          unichr(0xd800), unichr(0xdbff), unichr(0xdc00), unichr(0xdfff),
+                          unichr(0xd800), unichr(0xdbff), unichr(0xdc00), unichr(0xdfff))
+        x = u"<foo>text\u001a</foo>"
+        x = re.sub(RE_XML_ILLEGAL, "?", x)
+        dom = xml.dom.minidom.parseString(x.encode("utf-8"))
+    """
+
+    # Infeasible
+    """
     def load_file(self, filename):
-        print("Parsin file: ", filename)
+        print("Parsing file: ", filename)
         parsed = True
-        # try:
-        self._dom = xml.dom.minidom.parse(filename)
-
-        #except ExpatError:
-            #self._dom = xml.dom.minidom.parse("empty.xml")
-            #parsed = False
-
+        try:
+            self._dom = xml.dom.minidom.parse(filename)
+        except ExpatError:
+            self._dom = xml.dom.minidom.parse("empty.xml")
+            parsed = False
         return parsed
+    """
 
     def _get_interface(self, usage=None):
         if self.dict_interface is None:

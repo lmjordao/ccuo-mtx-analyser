@@ -1,6 +1,7 @@
 """
 
 """
+from config.config_properties import ConfigProperties
 from mtx.mtx_file_parser import MtxFileParser
 
 
@@ -9,12 +10,37 @@ class SignalBinding(MtxFileParser):
     def __init__(self, filename):
         super().__init__(filename)
         self.__external_connected_signals = None
+        self.list_connections = None
 
     def get_pou_name(self):
-        return self._dom.getElementsByTagName('pou')[0].getAttribute('name')
+        _pou = self._dom.getElementsByTagName('pou')
+        if _pou > 0:
+            return _pou[0].getAttribute('name')
+        _func_group = self._dom.getElementsByTagName('function-group')
+        if _func_group > 0:
+            return _func_group[0].getAttribute('name')
+        return ''
+
+    def get_connection_list(self):
+        if self.list_connections is None:
+            self.list_connections = list()
+
+            tag_connection_list = self._dom.getElementsByTagName('connection-list')[0]
+            if len(tag_connection_list) > 0:
+                connection_list = tag_connection_list.getElementsByTagName('connection')
+            else:
+                return self.list_connections
+
+            for _conn in connection_list:
+                self.list_connections.append({
+                    'reference': _conn.getAttribute('reference'),
+                    'type': _conn.getAttribute('type')
+                })
+        return self.list_connections
 
     def has_signal(self, signal):
-        return signal in self.get_variable_set()
+        return (signal in self.get_variable_set()) \
+               or (signal.split('_')[-1] in self.get_variable_set())
 
     def get_external_connected_signals(self, ccuo_data, usage=None):
 
@@ -24,7 +50,7 @@ class SignalBinding(MtxFileParser):
             if len(_interface) > 0:
                 interface = _interface[0]
             else:
-                return self.dict_interface
+                return self.__external_connected_signals
 
             list_var_group = interface.getElementsByTagName('variable-group')
 

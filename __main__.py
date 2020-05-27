@@ -22,7 +22,6 @@ Check output spreadsheet
 
 TODO: MTXFileParser, propriedades privadas
 
-TODO: Analysis tools has a method that returns a set to signalbinding with which components contain a given signal
 
 TODO: Merge ConfigLoader with configProperties
 
@@ -36,7 +35,6 @@ from config.config_loader import ConfigLoader
 from config.config_properties import ConfigProperties
 from data_model import DataModel
 from model.ccuo_project_data import CcuoProjectData
-from mtx.pad import PAD
 from mtx.signal_binding import SignalBinding
 from xlsx_exporter import XLSXExporter
 
@@ -71,9 +69,11 @@ def load_from_project():
     exporter.export_connections_to_component(generic_pad_connections, 'genPAD-connections')
     exporter.save()
     print("Finished")
+    print("Check " + EXPORT_FILENAME + ".xlsx")
 
 
 def main():
+
     # Load config file properties
     # config = ConfigProperties()
     # config.get_project_config("lotrain")
@@ -91,12 +91,12 @@ def load_local_pads():
     # TODO: This does not make any sense, mtx should be loaded automatically
     # Load interface objects
     model.pad = {
-        'eaa': PAD(components_dir + '/PAD/PAD_P_EAA/PAD.mtx'),
-        'eaa118': PAD(components_dir + '/PAD/PAD_P_EAA118/PAD.mtx'),
-        'lot': PAD(components_dir + '/PAD/PAD_P_LOTRAIN/PAD.mtx'),
-        'lot154': PAD(components_dir + '/PAD/PAD_P_LOTRAIN154/PAD.mtx'),
-        'swr': PAD(components_dir + '/PAD/PAD_P_SWR/PAD.mtx'),
-        'wml': PAD(components_dir + '/PAD/PAD_P_WML/PAD.mtx')
+        'eaa': SignalBinding(components_dir + '/PAD/PAD_P_EAA/PAD.mtx'),
+        'eaa118': SignalBinding(components_dir + '/PAD/PAD_P_EAA118/PAD.mtx'),
+        'lot': SignalBinding(components_dir + '/PAD/PAD_P_LOTRAIN/PAD.mtx'),
+        'lot154': SignalBinding(components_dir + '/PAD/PAD_P_LOTRAIN154/PAD.mtx'),
+        'swr': SignalBinding(components_dir + '/PAD/PAD_P_SWR/PAD.mtx'),
+        'wml': SignalBinding(components_dir + '/PAD/PAD_P_WML/PAD.mtx')
     }
 
     model.signal_binding_in = {
