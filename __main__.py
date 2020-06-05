@@ -16,6 +16,7 @@ might not be needed
 pad_file, task instance connect-name
 
 TODO: Contagem das diferenças dos sinais entre projectos
+Exemplos:
 Signals that are present among all projects: 2345
 Signals that were not found in certain projects: 584
 Check output spreadsheet
@@ -40,14 +41,15 @@ from xlsx_exporter import XLSXExporter
 
 EXPORT_FILENAME = 'export'
 
-components = dict()
+# components = dict()
 
-
+"""
 def _load_pad_out():
     # init pad here using sigbinding out
     pad_location = ConfigProperties.get_instance().config['base_project_dir'] \
                    + "\\PAD_P_LOTRAIN\\MTPE\\components\\PAD_P_LOTRAIN\\PAD_P_SignalBindingOut.mtx"
     return SignalBinding(pad_location)
+"""
 
 
 def load_from_project():
@@ -83,7 +85,7 @@ def main():
 if __name__ == "__main__":
     main()
 
-
+"""
 def load_local_pads():
     model = DataModel.get_instance()
     components_dir = ConfigLoader.getinstance().config_section_map('local')['components']
@@ -122,3 +124,4 @@ def load_local_pads():
     exporter.export_project_interface_comparison(model.signal_binding_in, 'SigBindIn_comparison')
     exporter.export_project_interface_comparison(model.signal_binding_out, 'SigBindOut_comparison')
     exporter.save()
+"""

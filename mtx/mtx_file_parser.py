@@ -33,6 +33,7 @@ class MtxFileParser:
         try:
             self._dom = xml.dom.minidom.parse(filename)
         except ExpatError:
+            # APPLY A CORRECTIVE ACTION
             # If Illegal chars have been found within XML file
             # they will be replaced with '', in order to ensure that the file is parsed
             escape_illegal_xml_characters = \

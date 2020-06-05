@@ -42,8 +42,11 @@ class SignalBinding(MtxFileParser):
         return (signal in self.get_variable_set()) \
                or (signal.split('_')[-1] in self.get_variable_set())
 
-    def get_external_connected_signals(self, ccuo_data, usage=None):
+    def has_signal_type(self, signal):
+        return (signal in self.get_variable_dict()) \
+               or (signal.split('_')[-1] in self.get_variable_set())
 
+    def get_external_connected_signals(self, ccuo_data, usage=None):
         if self.__external_connected_signals is None:
             self.__external_connected_signals = dict()
             _interface = self._dom.getElementsByTagName('interface')
