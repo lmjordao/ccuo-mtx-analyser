@@ -4,6 +4,7 @@
 
 *.7z
 *.zip
+*.ini
 
 __pycache__/
 *.py[cod]
