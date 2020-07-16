@@ -55,7 +55,8 @@ def _load_pad_out():
 def load_from_project():
 
     print("Parsing data...")
-    ccuo_data = CcuoProjectData("lotrain")
+    project_name = ConfigLoader.getinstance().config_section_map("local")['project_to_load']
+    ccuo_data = CcuoProjectData(project_name)
     #pad_out = _load_pad_out()
     #res = pad_out.get_external_connected_signals(ccuo_data, "output")
 
