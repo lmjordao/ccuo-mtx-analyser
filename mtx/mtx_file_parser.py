@@ -2,11 +2,10 @@
 mtx file parser
 """
 import io
+import re
+from xml.parsers.expat import ExpatError
 
 import xml.dom.minidom
-from xml.parsers.expat import ExpatError
-from lxml import etree
-import re
 
 
 class MtxFileParser:
