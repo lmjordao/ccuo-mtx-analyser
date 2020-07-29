@@ -110,6 +110,9 @@ class MtxFileParser:
 
     # get all variables as a set (used to identify uniques later)
     def get_variable_set(self):
+        """
+        :return: A set with all unique signal names
+        """
         if self.dict_interface is None:
             self._get_interface()
         if self.variable_set is None:
@@ -121,6 +124,9 @@ class MtxFileParser:
 
     # get all variables as a dictionary (used for performance gains)
     def get_variable_dict(self):
+        """
+        :return: A dictionary with signal name as a key
+        """
         if self.dict_interface is None:
             self._get_interface()
         if self.variable_dict is None:

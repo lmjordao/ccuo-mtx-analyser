@@ -14,7 +14,7 @@ class IPBookingList(XLSBookingList):
         { *spreadsheet name* :
             {*signal_name* :
                 {'used' : *true/false*},
-                {'type' : *true/false*}
+                {'type' : *type*}
             }
         }
         """

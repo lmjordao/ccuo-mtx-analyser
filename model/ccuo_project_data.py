@@ -24,6 +24,11 @@ class CcuoProjectData:
         )
 
     def _load_components_from_dir(self, component_dir):
+        """
+
+        :param component_dir: Directory with MTX components
+        :return:
+        """
         _dict = dict()
         for file in os.listdir(component_dir):
 
@@ -67,3 +72,7 @@ class CcuoProjectData:
                 if self.components[_component_group][filename].has_signal_type(signal, signal_type):
                     _signal_set.add(filename)
         return _signal_set
+
+    def get_master_compontents(self):
+
+        return {**self.components['aventra_components'], **self.components['project_components']}
