@@ -1,7 +1,6 @@
 """
 
 """
-from config.config_properties import ConfigProperties
 from mtx.mtx_file_parser import MtxFileParser
 
 
@@ -38,22 +37,22 @@ class SignalBinding(MtxFileParser):
                 })
         return self.list_connections
 
+    """
     def has_signal(self, signal):
         return (signal in self.get_variable_set()) \
                or (signal.split('_')[-1] in self.get_variable_set())
+    """
 
-    #alterar
-    def has_signal_type(self, signal, type):
+    def has_signal_type(self, _signal, _signal_type):
         ct_eq=0
         ct_neq=0
         for signal in self.get_variable_dict():
-            if type==self.variable_dict[signal]['type']:
+            if _signal_type == self.variable_dict[signal]['type']:
                 ct_eq+=1
                 print("Signal type equal")
             else:
                 ct_neq+=1
                 print("Signal type not equal")
-
 
     def get_external_connected_signals(self, ccuo_data, usage=None):
         if self.__external_connected_signals is None:
@@ -75,6 +74,8 @@ class SignalBinding(MtxFileParser):
                         if _var.getAttribute('usage') != usage:
                             continue
                     self.__external_connected_signals[var_group_name][_var.getAttribute('name')] = \
-                        ccuo_data.find_connections_to_signal(_var.getAttribute('name'), self.get_filename())
+                        ccuo_data.find_connections_to_signal_type(_var.getAttribute('name'),
+                                                                  _var.getAttribute('type'),
+                                                                  self.get_filename())
 
         return self.__external_connected_signals

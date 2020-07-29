@@ -33,10 +33,7 @@ TODO: Merge ConfigLoader with configProperties
 """
 
 from config.config_loader import ConfigLoader
-from config.config_properties import ConfigProperties
-from data_model import DataModel
 from model.ccuo_project_data import CcuoProjectData
-from mtx.signal_binding import SignalBinding
 from xlsx_exporter import XLSXExporter
 
 EXPORT_FILENAME = 'export'

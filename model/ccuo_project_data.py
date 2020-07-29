@@ -32,6 +32,7 @@ class CcuoProjectData:
                 # print(file, ' - ', _dict[file].parsed)
         return _dict
 
+    """
     def find_components_containing_signal(self, signal):
         _signal_set = set()
         for _component_group in self.components.keys():
@@ -39,7 +40,9 @@ class CcuoProjectData:
                 if self.components[_component_group][filename].has_signal(signal):
                     _signal_set.add(filename)
         return _signal_set
+    """
 
+    """
     def find_connections_to_signal(self, signal, interface_filename):
         _signal_set = set()
         for _component_group in self.components.keys():
@@ -51,9 +54,9 @@ class CcuoProjectData:
                 if self.components[_component_group][filename].has_signal(signal):
                     _signal_set.add(filename)
         return _signal_set
+    """
 
-
-    def find_connections_to_signal_type(self, signal, type, interface_filename):
+    def find_connections_to_signal_type(self, signal, signal_type, interface_filename):
         _signal_set = set()
         for _component_group in self.components.keys():
             for filename in self.components[_component_group].keys():
@@ -61,6 +64,6 @@ class CcuoProjectData:
                 if interface_filename == filename:
                     continue
                 # print(interface_filename, filename, interface_filename == filename)
-                if self.components[_component_group][filename].has_signal_type(signal,type):
+                if self.components[_component_group][filename].has_signal_type(signal, signal_type):
                     _signal_set.add(filename)
         return _signal_set
