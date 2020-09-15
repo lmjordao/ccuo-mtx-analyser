@@ -5,6 +5,7 @@ import os
 import xlsxwriter as xlsxwriter
 
 from data_model import DataModel
+from excel.excel import get_excel
 
 
 class XLSXExporter:
@@ -74,6 +75,7 @@ class XLSXExporter:
                 for _filename in connection_set[_var_group_key][_var_key]:
                     col = col + 1
                     worksheet.write(row, col, _filename)
+
                 row += 1
 
     def export_connections_to_component(self, connection_set, sheet_name):
@@ -90,6 +92,7 @@ class XLSXExporter:
                     worksheet.write(row, col, _filename)
                     col = col + 1
                     worksheet.write(row, col, _var_key)
+                    #get_excel(_var_key)
                     col = col + 1
                     worksheet.write(row, col, len(connection_set[_filename][_var_group_key][_var_key]))
 

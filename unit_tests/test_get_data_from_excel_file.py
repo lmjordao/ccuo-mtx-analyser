@@ -3,7 +3,7 @@
 """
 from model.ip_booking_list import IPBookingList
 
-xls_loc = "D:\\dimensions\\Realisation\\SIL0\\03 Architecture & Design\\C_Communication" \
+xls_loc = "..\\dimensions\\Realisation\\SIL0\\03 Architecture & Design\\C_Communication" \
           "\\3EST000237-0050 LOT TCMS IP Booking List.xlsm"
 
 

@@ -34,7 +34,7 @@ class IPBookingList(XLSBookingList):
         for i in range(min_sheet_offset, max_sheet_offset+1):
             _sheet = workbook.sheet_by_index(i)
             _data[_sheet.name] = self.__get_xls_sheet_data(_sheet)
-
+        print(_data)
         return _data
 
     def __get_xls_sheet_data(self, sheet):

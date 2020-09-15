@@ -33,8 +33,12 @@ TODO: Merge ConfigLoader with configProperties
 """
 
 from config.config_loader import ConfigLoader
+from comp.comp_values import comp_values
 from model.ccuo_project_data import CcuoProjectData
 from xlsx_exporter import XLSXExporter
+from excel import excel
+import os.path
+from os import path
 
 EXPORT_FILENAME = 'export'
 
@@ -52,31 +56,42 @@ def _load_pad_out():
 def load_from_project():
 
     print("Parsing data...")
-    project_name = ConfigLoader.getinstance().config_section_map("local")['project_to_load']
+    project_name = ConfigLoader.getinstance().config_section_map("local")['project_to_load']  #lotrain
     ccuo_data = CcuoProjectData(project_name)
+
     #pad_out = _load_pad_out()
     #res = pad_out.get_external_connected_signals(ccuo_data, "output")
-
+    print("CCUO_DATA")
+    print(ccuo_data)
+    print("NEXT point")
     generic_pad_connections = dict()
     for _pad_filename in ccuo_data.components['generic_pad'].keys():
+        print(_pad_filename)
+        print( ccuo_data.components['generic_pad'].keys())
         generic_pad_connections[_pad_filename] = \
             ccuo_data.components['generic_pad'][_pad_filename].\
             get_external_connected_signals(ccuo_data, "output")
 
+    #on  method comp_values, "generic_pad_connections" is send to be compared with the IP Booking List values
+    comp_values(generic_pad_connections)
     # print(res)
     exporter = XLSXExporter(EXPORT_FILENAME)
     # exporter.export_connection_set(res, 'connections')
+    print(generic_pad_connections)
+    print(exporter)
     exporter.export_connections_to_component(generic_pad_connections, 'genPAD-connections')
     exporter.save()
     print("Finished")
     print("Check " + EXPORT_FILENAME + ".xlsx")
 
 
-def main():
 
+def main():
     # Load config file properties
-    # config = ConfigProperties()
-    # config.get_project_config("lotrain")
+    #config = ConfigProperties()
+    #config.get_project_config("lotrain")
+    #print(path.exists("config.ini"))
+
     load_from_project()
 
 
