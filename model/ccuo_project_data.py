@@ -10,18 +10,22 @@ from mtx.signal_binding import SignalBinding
 class CcuoProjectData:
 
     def __init__(self, project_name):
+
         self.config = ConfigProperties.get_instance().get_project_config(project_name)
         self.components = dict()
-
+        print(self.config)
         self.components['aventra_components'] = self._load_components_from_dir(
             self.config['aventra_components']
         )
+        print("3")
         self.components['project_components'] = self._load_components_from_dir(
             self.config['project_components']
         )
+        print("4")
         self.components['generic_pad'] = self._load_components_from_dir(
             self.config['generic_pad']
         )
+        print("5")
 
     def _load_components_from_dir(self, component_dir):
         """
@@ -29,12 +33,16 @@ class CcuoProjectData:
         :param component_dir: Directory with MTX components
         :return:
         """
+        print("ik "+str(component_dir))
+
         _dict = dict()
+
+
         for file in os.listdir(component_dir):
 
             if file.endswith(".mtx"):
                 _dict[file] = SignalBinding(component_dir + '\\' + file)
-                # print(file, ' - ', _dict[file].parsed)
+
         return _dict
 
     """

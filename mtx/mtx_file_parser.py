@@ -50,33 +50,6 @@ class MtxFileParser:
             corrected = True
         return corrected
 
-
-    """
-    def __apply_corrective_action(self):
-        RE_XML_ILLEGAL = u'([\u0000-\u0008\u000b-\u000c\u000e-\u001f\ufffe-\uffff])' + \
-                         u'|' + \
-                         u'([%s-%s][^%s-%s])|([^%s-%s][%s-%s])|([%s-%s]$)|(^[%s-%s])' % \
-                         (unichr(0xd800), unichr(0xdbff), unichr(0xdc00), unichr(0xdfff),
-                          unichr(0xd800), unichr(0xdbff), unichr(0xdc00), unichr(0xdfff),
-                          unichr(0xd800), unichr(0xdbff), unichr(0xdc00), unichr(0xdfff))
-        x = u"<foo>text\u001a</foo>"
-        x = re.sub(RE_XML_ILLEGAL, "?", x)
-        dom = xml.dom.minidom.parseString(x.encode("utf-8"))
-    """
-
-    # Infeasible
-    """
-    def load_file(self, filename):
-        print("Parsing file: ", filename)
-        parsed = True
-        try:
-            self._dom = xml.dom.minidom.parse(filename)
-        except ExpatError:
-            self._dom = xml.dom.minidom.parse("empty.xml")
-            parsed = False
-        return parsed
-    """
-
     def _get_interface(self, usage=None):
         if self.dict_interface is None:
             self.dict_interface = dict()
