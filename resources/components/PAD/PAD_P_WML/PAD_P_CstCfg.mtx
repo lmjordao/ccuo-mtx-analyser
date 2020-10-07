@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created 2020-04-28 00:23:36 by acristin on BTIS1000096002 using MTPE-5.3.0.1 -->
+<!-- File: C:/Users/acristin/Workspaces/Generic Workspace/PAD_P_WML/MTPE/components/PAD_P_WML/PAD_P_CstCfg.mtx -->
+<pou name="PAD_P_CstCfg" version="1.0.0.0" type="ST" sub-type="Program" user-build="0">
+ <iec-data><![CDATA[(*@PROPERTIES_EX@
+TYPE: POU
+LOCALE: 0
+IEC_LANGUAGE: ST
+PLC_TYPE: PowerPC
+PROC_TYPE: independent
+GROUP: PAD.PAD_F_Aventra.Config
+*)
+(*@KEY@:DESCRIPTION*)
+------------------------------------------------------------------------------------
+COPYRIGHT       :  (c) 2017 Bombardier Inc. or its subsidiaries. All rights reserved.
+------------------------------------------------------------------------------------
+
+name            :      PAD_P_CstCfg
+category        :      Program POU PAD family
+
+revision log    :
+version   : prepared   : creator (dept.)                : action (short)
+1.0.0.13  : 2020-04-27 : Armando Cristino (RoQ/TPD)		: Defect 454464: Changed value of PCSetDrsClsCstCond to 129 (bit0 and bit7 set o 1)
+1.0.0.12  : 2019-06-21 : Aditya Karmarkar (RoQ/TDC)     : FR 249096: Initialized PEnDrgDtcdMon to TRUE
+1.0.0.11  : 2019-01-29 : Aditya Karmarkar (RoQ/TDC)     : FR 288760: Initialized PEnCndtMdMon to TRUE 
+1.0.0.10  : 2019-01-24 : Rene Klein (RoQ/TPD)           : FR 278253: initialised the configuration parameter PCDrsOpnCstPreCondSet
+1.0.0.9	  : 2019-01-15 : Rene Klein (RoQ/TPX)           : FR 288770: initialised PTStatusClsCmdMonFb
+1.0.0.8   : 2019-01-09 : Rene Klein (RoQ/TPD)           : FR 278253: DEFECT254089 changed value of PCRstDrsClsCstCond from 3 to 128
+1.0.0.7   : 2019-01-09 : Rene Klein (RoQ/TPD)           : FR 278253: FR 248986: initialised the configuration parameter PTStatusInhMonFb
+1.0.0.6   : 2019-01-08 : Rene Klein (RoQ/TPD)           : FR 278253: DEFECT165286 changed PModeInhDrs from TRUE to FALSE 
+1.0.0.5   : 2018-12-12 : Rene Klein (RoQ/TPD)           : FR 278253: DEFECT214588 deleted CFG_PadCstCarCfg.PExists :=WORD#16#1F;
+1.0.0.4	  : 2017-11-27 : Peter Schenk (RoQ/TPD			: correction of missing and doubled data
+1.0.0.3   : 2017-11-21 : Stefan Lemke (RoQ/TX)			: obstacle uncondition to false
+1.0.0.2   : 2017-06-28 : Stefan Lemke (RoQ/TPAS)        : step level parameter changed 
+1.0.0.1   : 2017-03-06 : Peter Schenk (RoQ/TPX)         : naming conventions
+1.0.0.0   : 2017-02-28 : Stefan Lemke (RoQ/TPAS)        : first issue
+
+description:
+project specific values for config parameters for consist component for PAD
+for not changed values input init (input) shall be written to the output without change.
+
+
+* REMARKS : ANY CHANGES MADE TO THIS FILE WILL BE LOST WHEN RE-GENERATING IT!!! *
+
+Created with : Configuration generator Version: 1.3.0.0 From: 2016-02-26
+(*@KEY@:END_DESCRIPTION*)
+PROGRAM PAD_P_CstCfg
+
+(*Group:OUT*)
+
+
+VAR_OUTPUT
+	CFG_PadCstCtrlCfg :	PadGCstCtrlCfg;(*configuration information for the consist controller*)
+	CFG_PadCstCarCfg :	PadGCstCarCfg;(*configuration information for the car in consist*)
+	CFG_PadCabCfg :	PadGCabCfg;(*configuration information for the cabs in consist*)
+END_VAR
+
+
+(*@KEY@: WORKSHEET
+NAME: PAD_P_CstCfg
+IEC_LANGUAGE: ST
+*)
+(* init parameters *)
+CFG_PadCstCtrlCfg.PCargoDoorsExist := FALSE;
+CFG_PadCstCtrlCfg.PEnClctHwDoorLoop := TRUE;
+CFG_PadCstCtrlCfg.PEnClctSwDoorLoop := TRUE;
+CFG_PadCstCtrlCfg.PEnStepDoorLoop := FALSE;
+CFG_PadCstCtrlCfg.PCRstDrsClsCstCond :=BYTE#128;
+CFG_PadCstCtrlCfg.PCRstDrsOpnCstCond :=BYTE#128;
+CFG_PadCstCtrlCfg.PCRstDrsPreRelCstCond :=BYTE#0;
+CFG_PadCstCtrlCfg.PCRstDrsRelCstCond :=BYTE#145;
+CFG_PadCstCtrlCfg.PCRstDrsSideSelCond :=BYTE#0;
+CFG_PadCstCtrlCfg.PCSetDrsClsCstCond :=BYTE#129;
+CFG_PadCstCtrlCfg.PCSetDrsOpnCstCond :=BYTE#0;
+CFG_PadCstCtrlCfg.PCSetDrsPreRelCstCond :=BYTE#0;
+CFG_PadCstCtrlCfg.PCSetDrsRelCstCond :=BYTE#0;
+CFG_PadCstCtrlCfg.PCSetDrsSideSelCond :=BYTE#0;
+CFG_PadCstCtrlCfg.PEnCentralOpn := TRUE;
+CFG_PadCstCtrlCfg.PEnCentralOpnMon := FALSE;
+CFG_PadCstCtrlCfg.PEnDrsOpndMon := TRUE;
+CFG_PadCstCtrlCfg.PEnClsCmdInd := TRUE;
+CFG_PadCstCtrlCfg.PEnClsCmdMon := TRUE;
+CFG_PadCstCtrlCfg.PEnClsDrs := TRUE;
+CFG_PadCstCtrlCfg.PEnDiLocSnd := FALSE;
+CFG_PadCstCtrlCfg.PEnDiOpnOut := FALSE;
+CFG_PadCstCtrlCfg.PEnStpCtrl := FALSE;
+CFG_PadCstCtrlCfg.PEnLckFirst := FALSE;
+CFG_PadCstCtrlCfg.PEnLckLast := FALSE;
+CFG_PadCstCtrlCfg.PEnPreRel := FALSE;
+CFG_PadCstCtrlCfg.PEnRelDrs := TRUE;
+CFG_PadCstCtrlCfg.PEnRelDrsMon := TRUE;
+CFG_PadCstCtrlCfg.PEnDrsRlsdMon := TRUE;
+CFG_PadCstCtrlCfg.PSpeedRelMax := UINT#8;
+CFG_PadCstCtrlCfg.PEnSideSel := TRUE;
+CFG_PadCstCtrlCfg.PEnTrnLnCls := FALSE;
+CFG_PadCstCtrlCfg.PEnEmAcsMon := TRUE;
+CFG_PadCstCtrlCfg.PEnEmEgrMon := TRUE;
+CFG_PadCstCtrlCfg.PTDrLpDiscrpTm := t#2s;
+CFG_PadCstCtrlCfg.PVObstacleDetection := UINT#100;
+CFG_PadCstCtrlCfg.PTObstacleDetection := t#10s;
+CFG_PadCstCtrlCfg.PObstclDetEnRls := FALSE;
+CFG_PadCstCtrlCfg.PObstclDetUncond := FALSE;
+CFG_PadCstCtrlCfg.PTOpnIntDrs := t#2s;
+CFG_PadCstCtrlCfg.PSpeedRelCst := UINT#5;
+CFG_PadCstCtrlCfg.PSpeedOpnReq := UINT#5;
+CFG_PadCstCtrlCfg.PSpeedOpnCst := UINT#5;
+CFG_PadCstCtrlCfg.PModeCls := FALSE;
+CFG_PadCstCtrlCfg.PModeDiStp := FALSE;
+CFG_PadCstCtrlCfg.PModeLckFirst := FALSE;
+CFG_PadCstCtrlCfg.PModeLckLast := FALSE;
+CFG_PadCstCtrlCfg.PModeOpn := FALSE;
+CFG_PadCstCtrlCfg.PModePreRel := FALSE;
+CFG_PadCstCtrlCfg.PModeRel := FALSE;
+CFG_PadCstCtrlCfg.PModeSideSel := FALSE;
+CFG_PadCstCtrlCfg.PTDriverCmd := t#2s;
+CFG_PadCstCtrlCfg.PSpeedEmUnLck := UINT#50;
+CFG_PadCstCtrlCfg.PSpeedOpnMax := UINT#10;
+CFG_PadCstCtrlCfg.PTStatusMonFb := TIME#5s;
+CFG_PadCstCtrlCfg.PTStatusInhMonFb := TIME#3s;
+CFG_PadCstCtrlCfg.PTStatusClsCmdMonFb := TIME#10s;
+
+CFG_PadCstCtrlCfg.PEnDiRlsDrs := TRUE;
+CFG_PadCstCtrlCfg.PModeDiRlsDrs := FALSE; (*permanent signal mode*)
+CFG_PadCstCtrlCfg.PEnInhDrs := TRUE;
+CFG_PadCstCtrlCfg.PModeInhDrs := FALSE; (*Toggle mode*)
+CFG_PadCstCtrlCfg.PEnObstacleDrv := TRUE;
+CFG_PadCstCtrlCfg.PEnSgnBellMon := TRUE;
+CFG_PadCstCtrlCfg.PEnDsbClsPbReqMon := FALSE;
+CFG_PadCstCtrlCfg.PEnEmEgrDiag := False;
+CFG_PadCstCtrlCfg.PEnEmAcsDiag := FALSE;
+CFG_PadCstCtrlCfg.PEnCarHwSwInCo := FALSE;
+CFG_PadCstCtrlCfg.PEnCarHwMisFed := FALSE;
+CFG_PadCstCtrlCfg.PCDrsOpnCstPreCondSet := BYTE#1; (*configuration parameter, Aventra: 1; Talent 3*)
+CFG_PadCstCtrlCfg.PEnClsMon := TRUE; (* Parameter to enablemonitoring close command to DCU and command feedback from DCU -> For AVENTRA = TRUE*)
+CFG_PadCstCtrlCfg.PEnCndtMdMon := TRUE; (* To enable conductor mode for EAA *)
+CFG_PadCstCtrlCfg.PEnDrgDtcdMon := TRUE; (*Enabled drag detection monitoring for EAA*)
+
+
+CFG_PadCstCarCfg.PMaxCarCst := USINT#5;
+CFG_PadCstCarCfg.PMaxDrsCar := USINT#6;
+CFG_PadCstCarCfg.Door01Cfg.PBlckRelMaintHatch :=WORD#0;
+CFG_PadCstCarCfg.Door01Cfg.PExists :=WORD#31;
+CFG_PadCstCarCfg.Door01Cfg.PStepLevel1Exists := WORD#0;
+CFG_PadCstCarCfg.Door01Cfg.PStepLevel2Exists :=WORD#0;
+
+CFG_PadCstCarCfg.Door02Cfg.PBlckRelMaintHatch :=WORD#0;
+CFG_PadCstCarCfg.Door02Cfg.PExists :=WORD#31;
+CFG_PadCstCarCfg.Door02Cfg.PStepLevel1Exists :=WORD#0;
+CFG_PadCstCarCfg.Door02Cfg.PStepLevel2Exists := WORD#0;
+
+CFG_PadCstCarCfg.Door03Cfg.PBlckRelMaintHatch :=WORD#0;
+CFG_PadCstCarCfg.Door03Cfg.PExists :=WORD#0;
+CFG_PadCstCarCfg.Door03Cfg.PStepLevel1Exists :=WORD#0;
+CFG_PadCstCarCfg.Door03Cfg.PStepLevel2Exists := WORD#0;
+
+CFG_PadCstCarCfg.Door04Cfg.PBlckRelMaintHatch :=WORD#0;
+CFG_PadCstCarCfg.Door04Cfg.PExists :=WORD#0;
+CFG_PadCstCarCfg.Door04Cfg.PStepLevel1Exists :=WORD#0;
+CFG_PadCstCarCfg.Door04Cfg.PStepLevel2Exists := WORD#0;
+
+CFG_PadCstCarCfg.Door05Cfg.PBlckRelMaintHatch :=WORD#0;
+CFG_PadCstCarCfg.Door05Cfg.PExists :=WORD#31;
+CFG_PadCstCarCfg.Door05Cfg.PStepLevel1Exists :=WORD#0;
+CFG_PadCstCarCfg.Door05Cfg.PStepLevel2Exists := WORD#0;
+
+CFG_PadCstCarCfg.Door06Cfg.PBlckRelMaintHatch :=WORD#0;
+CFG_PadCstCarCfg.Door06Cfg.PExists :=WORD#31;
+CFG_PadCstCarCfg.Door06Cfg.PStepLevel1Exists :=WORD#0;
+CFG_PadCstCarCfg.Door06Cfg.PStepLevel2Exists := WORD#0;
+
+(* cab information *)
+CFG_PadCabCfg.PCabExists :=WORD#16#3;
+CFG_PadCabCfg.PCabDrExist := WORD#16#3;
+(*@KEY@: END_WORKSHEET *)
+END_PROGRAM
+]]></iec-data>
+ <interface>
+  <variable-group name="OUT">
+   <variable name="CFG_PadCstCtrlCfg" array-size="1" type="PadGCstCtrlCfg" usage="output">
+    <comment><![CDATA[configuration information for the consist controller]]></comment>
+   </variable>
+   <variable name="CFG_PadCstCarCfg" array-size="1" type="PadGCstCarCfg" usage="output">
+    <comment><![CDATA[configuration information for the car in consist]]></comment>
+   </variable>
+   <variable name="CFG_PadCabCfg" array-size="1" type="PadGCabCfg" usage="output">
+    <comment><![CDATA[configuration information for the cabs in consist]]></comment>
+   </variable>
+  </variable-group>
+ </interface>
+</pou>

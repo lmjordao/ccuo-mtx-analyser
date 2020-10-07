@@ -1,0 +1,1210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created 2019-12-20 16:14:58 by ajsaini on BTIS1000081542 using MTPE-6.1.0.1 -->
+<!-- File: D:/Generic Sandboxx/PAD_P_EAA/MTPE/components/PAD_P_EAA/PAD_P_DCU_IN.mtx -->
+<pou name="PAD_P_DCU_IN" version="1.0.5.0" type="FBD" sub-type="Program" user-build="0">
+ <iec-data><![CDATA[(*@PROPERTIES_EX@
+TYPE: POU
+LOCALE: 0
+IEC_LANGUAGE: FBD
+PLC_TYPE: PowerPC
+PROC_TYPE: independent
+GROUP: PAD.PAD_P_EastAnglia
+*)
+(*@KEY@:DESCRIPTION*)
+---------------------------------------------------------------------------------------
+COPYRIGHT       :   (c) 2017 Bombardier Inc. or its subsidiaries. All rights reserved.
+---------------------------------------------------------------------------------------
+name            :   PAD_P_DCU_IN
+category        :   Program POU PAD generic 
+
+revision log    : 
+
+1.0.5.8   : 2019-08-02 : Armando Cristino (RoQ/TDC)      : Defect 347802: set PDcuLifeSignCheck intial value to TRUE
+1.0.5.7   : 2019-04-27 : Armando Cristino (RoQ/TDC)      : FR 249096: added signals to read drag detection status from DCU
+1.0.5.6   : 2019-01-29 : Aditya Karmarkar (RoQ/TDC)      : FR 288760 : adapted logic to read conductor mode from individual doors- made relevant connections in MTPE
+1.0.5.5   : 2017-11-21 : Stefan Lemke (RoQ/TPA2)         : SDrsOpnd added to DcuStatusExt
+1.0.5.4   : 2017-11-20 : Stefan Lemke (RoQ/TPA2)         : lifesign handling added
+1.0.5.3   : 2017-11-17 : Stefan Lemke (RoQ/TPA2)         : lifesign handling added
+1.0.5.2   : 2017-10-27 : Stefan Lemke (RoQ/TPA2)         : unconnected signals added
+1.0.5.1   : 2017-09-27 : Stefan Lemke (RoQ/TPAS)         : unconnected signals removed (lifesign)
+1.0.5.0   : 2017-07-07 : Erwan Humbert (RoQ/TPX)         : Enable_PAD activation flag.
+1.0.4.0   : 2017-07-04 : Tushar Chodvadiya(RoQ/TIG)      : Re-design - added validity for each status signals
+1.0.3.2   : 2017-03-31 : Iva Milojevic(RoQ/TPX)          : added DrLocalOpPb
+1.0.3.0   : 2017-03-22 : Erwan Humbert (RoQ/TPX)         : added inhibited by driver, corrected inhibited by ASDO, changed all EQ by AND for XSts
+1.0.2.2   : 2017-03-06 : Iva Milojevic(RoQ/TPX)          : added signals for command feedback cl, Op, rls
+1.0.2.1   : 2017-03-02 : Iva Milojevic(RoQ/TPX)          : added opened status, opening, closing
+1.0.2.0   : 2017-02-24 : Iva Milojevic(RoQ/TPX)          : new naming convention applied for signal names
+1.0.1.1   : 2016-12-02 : Iva Milojevic (ISC/TPX)         : changed Xinst-> XInst
+1.0.1.0   : 2016-11-10 : Iva Milojevic (ISC/TPX)         : added input valid signal 
+1.0.0.2   : 2016-11-09 : Iva Milojevic (ISC/TPX)         : added logic for output signals DrsInhPEDErr and DrsInhSDOErr
+1.0.0.1   : 2016-11-07 : Iva Milojevic (ISC/TPX)         : mapping from DCU input to generic structure
+1.0.0.0   : 2016-09-25 : Iva Milojevic (ISC/TPX)         : first issue
+          :            :                                 : 
+
+description:
+read input signals from DCU 
+These shall be mapped to generic SW interface and distributed to other parts of generic SW as well as Extensions (if needed)
+(*@KEY@:END_DESCRIPTION*)
+PROGRAM PAD_P_DCU_IN
+
+(*Group:Local*)
+
+
+VAR
+	EnSigNeedToBeSkip :	BOOL := TRUE;
+	XStsW :	WORD;(*XSts converted to WORD for convenient use of GetBitWord*)
+	_XLifeSign_1 :	INT;(*local storage of lifesign1*)
+	_XLifeSign_2 :	INT;(*local storage of lifesign2*)
+	TOF_Lifesign1 :	TOF;(*delay for lifesign1 detection*)
+	TOF_Lifesign2 :	TOF;(*delay for lifesign2 detection*)
+	PTLifeSign :	TIME := TIME#500ms;(*Delay for lifesign detection*)
+	PDcuLifeSignCheck :	BOOL := TRUE;(*Flag to disable the lifesign check*)
+	SDcuValid :	BOOL;
+END_VAR
+
+
+(*Group:IN validity*)
+
+
+VAR_INPUT
+	Enable_FA :	BOOL;(*Enable PAD FA*)
+	(*<C_VDCU :	BOOL;>*)(*valid bit information from status signal - this door instanc is communicating*)
+END_VAR
+
+
+(*Group:DOORS_in*)
+
+
+VAR_INPUT
+	XSwVer :	USINT;(*System software version; Incremented if new SW is incompatible to previous SW version or hardware.; Default : 0*)
+	XSwRel :	USINT;(*System software release;  Incremented if new SW has major changes or additional functions but is still compatible.; Default : 0*)
+	XSwUpd :	USINT;(*System software update; Incremented if new SW with minor modifications during elaboration ; Default : 0*)
+	XSwEvo :	USINT;(*System software evolution; Incremented if new SW is for testing (not validated); Default : 0*)
+	XHwVer :	USINT;(*System hardware version ; Basic functional changes, incompatible to previous HW versions (e.g. change in firmware, I/O). ; Default : 0*)
+	XHwRel :	USINT;(*System hardware release ; Minor changes. Still compatible; Default : 0*)
+	XLifeSign_1 :	INT;(*System shall set this counter to zero after reset including power-up and increment it with every telegram cycle.*)
+	XLifeSign_2 :	INT;(*System shall set this counter to zero after reset including power-up and increment it with every telegram cycle.*)
+	XDevAppMd :	USINT;(*Device application mode*)
+	XDevCfg :	USINT;(*Device configuration*)
+	XMd :	USINT;(*Door mode. Default : 1*)
+	XSts :	USINT;(*Door Status; Clarification of Signals:; Bit 0: Door Closed & Locked (either released or not released); Bit 1: Door is inhibited due to a PED failure; Bit 2: Door is inhibited due to SDO ; Bit 3: Door is inhibited by the Driver; Bit 4: Door is either open or closed and is released.; Bit 5: Door is not in closed position; Bit 6: Door has been unlocked using either EED or EAD; Default : 0*)
+	SEmEgrDevOpr :	BOOL;(*Emergency Egress Device Operated*)
+	SEmAccss :	BOOL;(*Emergency Access Device Operated*)
+	SLkdOutOfSrvc :	BOOL;(*Door Locked Out of Service*)
+	SFltA :	BOOL;(*Door Fault - priority A; Summary fault signal in case any priority A diagnostic code is set in the EDCU; Used as the signal to inform the driver when to isolate the door from opening*)
+	SFltB :	BOOL;(*Door Fault - priority B; Summary fault signal in case any priority B diagnostic code is set in the EDCU*)
+	SOpSqAct :	BOOL;(*Door Opening sequence active.*)
+	SClSwAct :	BOOL;(*Door Closing sequence active.*)
+	STrnAtSpdFb :	BOOL;(*Feedback of Input 3; (Train at Speed)*)
+	SRelFb :	BOOL;(*Feedback of Input 4; (Door Release)*)
+	SClFb :	BOOL;(*Feedback of Input 5; (Door Close)*)
+	SOpPb :	BOOL;(*Door Open Pushbutton*)
+	SObstDet :	BOOL;(*Obstacle detected ; Signal is set TRUE as soon as an obstacle is detected either during opening or closing sequence ; Signal is reset to FALSE when door moves to Closed & Locked position.*)
+	SBurninAct :	BOOL;(*Burn In test (door cycling) is active.*)
+	SBurninOk :	BOOL;(*Burn In test (door cycling) passed.; Last Burn in test was successful: door cycling completed without any failure detected.*)
+	SBurninNotOk :	BOOL;(*Burn In test (door cycling) not passed.; Last Burn in test was not successful: door cycling not completed correctly (aborted or door fault detected).*)
+	SCrewSwOp :	BOOL;(*Crew key switch open is operated. Signal type: Steady signal.*)
+	SClLckFlt :	BOOL;(*Door leaves the closed & locked position without permission.*)
+	SSrvcPbFlt :	BOOL;(*Service Button on the DCU fails for a duration of 1 minute.*)
+	SBusComFlt :	BOOL;(*Bus communication fails ; Signals and functions via bus are no longer available*)
+	SSdoEnFlt :	BOOL;(*SDO Enable Hardware & SDO Enable Software Mismatch 1; H/W SDO Enable =1 (I01) & S/W SDO Enable = 0 for 5s; OR; H/W SDO Enable =0 (I01) & S/W SDO Enable = 1 for 5s*)
+	SClFlt :	BOOL;(*Door Closed HW & Door Close SW commands mismatch; - H/W close input (I05) changes to TRUE and S/W close signal is not detected TRUE within 5sec; OR;  - S/W close signal changes to TRUE and H/W close input (I05) is not detected TRUE within 5sec*)
+	SOpPosFlt :	BOOL;(*System does not detect opened position within a defined time*)
+	SClPosFlt :	BOOL;(*System does not detect closed position within a defined time*)
+	STrnCtrlFlt :	BOOL;(*SIgnals from the Train Control are faulty; Door release signal active (I04) and Train at speed*)
+	PAD_DcuIn :	PadFDcuIn;(*Individual DCU input- additional variable for project*)
+	SDragActive :	BOOL;(*Signal drom DCU input-drag detection on door instance*)
+END_VAR
+
+
+(*Group: OUT to generic SW (consist level)*)
+
+
+VAR_OUTPUT
+	PAD_DcuStatus :	PadGDcuStatus;(*status from door in car*)
+	PAD_DcuStatusV :	BOOL;(*status from door  in car  valid bit*)
+	PAD_DcuStatusExt :	PadFDcuStatusExt;(*status from door in car*)
+END_VAR
+
+
+(*@KEY@: WORKSHEET
+NAME: First
+IEC_LANGUAGE: FBD
+*)
+[GRA]
+400 400 0 0 0 0 0 
+
+[LIT]
+0
+
+[TET]
+2
+9 10 22 12 4 5 Enable_FA
+34 10 48 12 11 4 RETURN
+
+[FBS]
+1
+196632 196615 32 15 1 0 NOT @  
+
+[FPT]
+2
+24 10 26 12 IN1 0 0 0 0 4737 0 @ ANY_BIT 
+31 10 32 12 NOT 0 0 0 1 0 4737 @ ANY_BIT 
+
+[AKT]
+0
+
+[STT]
+0
+
+[TRT]
+0
+
+[KOT]
+0
+
+[VER]
+0
+
+[IBX]
+0
+
+[CON]
+1
+5
+0 1 3 9 10 22 12
+1 4 0 34 10 48 12
+0 0 24 7 32 15
+1 0 0 24 10 26 12
+0 1 1 31 10 32 12
+[CON]
+
+(*@KEY@: END_WORKSHEET *)
+(*@KEY@: WORKSHEET
+NAME: LifeSignHandling
+IEC_LANGUAGE: FBD
+*)
+[GRA]
+400 400 0 0 0 0 0 
+
+[LIT]
+21
+21 16 27 16 0 ""
+22 20 27 20 0 ""
+58 20 63 20 0 ""
+39 16 63 16 0 ""
+23 37 28 37 0 ""
+23 41 28 41 0 ""
+58 41 63 41 0 ""
+40 37 63 37 0 ""
+86 33 105 33 0 ""
+76 37 105 37 0 ""
+100 29 105 29 0 ""
+76 16 104 16 0 ""
+145 17 148 17 0 ""
+116 8 124 8 0 ""
+124 8 124 17 0 ""
+124 17 133 17 0 ""
+117 29 125 29 0 ""
+125 29 125 21 13 ""
+125 21 133 21 0 ""
+70 52 93 52 0 ""
+70 56 93 56 0 ""
+
+[TET]
+17
+9 15 21 17 4 5 XLifeSign_1
+9 19 22 21 4 5 _XLifeSign_1
+63 9 77 12 7 6 TOF_Lifesign1
+47 19 58 21 4 5 PTLifeSign
+96 11 104 13 4 5 TRUE
+148 16 159 18 4 3 SDcuValid
+11 36 23 38 4 5 XLifeSign_2
+10 40 23 42 4 5 _XLifeSign_2
+63 30 77 33 7 6 TOF_Lifesign2
+47 40 58 42 4 5 PTLifeSign
+78 32 86 34 4 5 TRUE
+82 28 100 30 4 5 PDcuLifeSignCheck
+58 51 70 53 4 5 XLifeSign_1
+58 55 70 57 4 5 XLifeSign_2
+93 51 106 53 4 3 _XLifeSign_1
+93 55 106 57 4 3 _XLifeSign_2
+86 7 104 9 4 5 PDcuLifeSignCheck
+
+[FBS]
+7
+262173 196620 37 24 1 0 NE @  
+262209 262156 74 25 0 0 TOF TOF_Lifesign1  
+262250 196612 114 20 1 0 SEL @  
+262174 196641 38 45 1 0 NE @  
+262209 262177 74 45 0 0 TOF TOF_Lifesign2  
+262251 196633 115 41 1 0 SEL @  
+196743 196621 143 25 1 0 OR @  
+
+[FPT]
+25
+29 15 34 17 IN1 0 0 0 0 4224 0 @ ELEMENTARY 
+29 19 34 21 IN2 0 0 0 0 4224 0 @ ELEMENTARY 
+36 15 37 17 NE 0 0 0 1 0 4737 @ BOOL 
+65 15 69 17 IN 0 0 0 0 4225 0 @ BOOL 
+65 19 70 21 PT 0 0 0 0 4224 0 @ TIME 
+71 15 74 17 Q 0 0 0 1 0 4225 @ BOOL 
+70 19 74 21 ET 0 0 0 1 0 4224 @ TIME 
+106 7 110 9 G 0 0 0 0 4225 0 @ BOOL 
+106 11 111 13 IN0 0 0 0 0 4224 0 @ ANY 
+106 15 111 17 IN1 0 0 0 0 4224 0 @ ANY 
+113 7 114 9 SEL 0 0 0 1 0 4736 @ ANY 
+30 36 35 38 IN1 0 0 0 0 4224 0 @ ELEMENTARY 
+30 40 35 42 IN2 0 0 0 0 4224 0 @ ELEMENTARY 
+37 36 38 38 NE 0 0 0 1 0 4737 @ BOOL 
+65 36 69 38 IN 0 0 0 0 4225 0 @ BOOL 
+65 40 70 42 PT 0 0 0 0 4224 0 @ TIME 
+71 36 74 38 Q 0 0 0 1 0 4225 @ BOOL 
+70 40 74 42 ET 0 0 0 1 0 4224 @ TIME 
+107 28 111 30 G 0 0 0 0 4225 0 @ BOOL 
+107 32 112 34 IN0 0 0 0 0 4224 0 @ ANY 
+107 36 112 38 IN1 0 0 0 0 4224 0 @ ANY 
+114 28 115 30 SEL 0 0 0 1 0 4736 @ ANY 
+135 16 137 18 IN1 2 0 0 0 1665 0 @ ANY_BIT 
+135 20 137 22 IN2 2 0 0 0 1665 0 @ ANY_BIT 
+142 16 143 18 OR 0 0 0 1 0 641 @ ANY_BIT 
+
+[AKT]
+0
+
+[STT]
+0
+
+[TRT]
+0
+
+[KOT]
+0
+
+[VER]
+0
+
+[IBX]
+0
+
+[CON]
+1
+70
+1 21 1 45 21 16 27 16
+1 22 1 46 22 20 27 20
+1 24 1 49 58 20 63 20
+1 47 1 48 39 16 63 16
+1 27 1 56 23 37 28 37
+1 28 1 57 23 41 28 41
+1 30 1 60 58 41 63 41
+1 58 1 59 40 37 63 37
+1 31 1 64 86 33 105 33
+1 61 1 65 76 37 105 37
+1 32 1 63 100 29 105 29
+1 50 1 54 76 16 104 16
+1 69 1 26 145 17 148 17
+1 55 1 14 116 8 124 8
+1 13 1 15 124 8 124 17
+1 14 1 67 124 17 133 17
+1 66 1 17 117 29 125 29
+1 16 1 18 125 21 125 29
+1 17 1 68 125 21 133 21
+1 33 1 35 70 52 93 52
+1 34 1 36 70 56 93 56
+0 1 0 9 15 21 17
+0 1 1 9 19 22 21
+0 0 63 9 77 12
+0 1 2 47 19 58 21
+0 1 53 96 11 104 13
+1 12 0 148 16 159 18
+0 1 4 11 36 23 38
+0 1 5 10 40 23 42
+0 0 63 30 77 33
+0 1 6 47 40 58 42
+0 1 8 78 32 86 34
+0 1 10 82 28 100 30
+0 1 19 58 51 70 53
+0 1 20 58 55 70 57
+1 19 0 93 51 106 53
+1 20 0 93 55 106 57
+0 1 52 86 7 104 9
+0 0 29 12 37 24
+0 0 65 12 74 25
+0 0 106 4 114 20
+0 0 30 33 38 45
+0 0 65 33 74 45
+0 0 107 25 115 41
+0 0 135 13 143 25
+1 0 0 29 15 34 17
+1 1 0 29 19 34 21
+0 1 3 36 15 37 17
+1 3 0 65 15 69 17
+1 2 0 65 19 70 21
+0 1 11 71 15 74 17
+0 0 70 19 74 21
+1 37 0 106 7 110 9
+1 25 0 106 11 111 13
+1 11 0 106 15 111 17
+0 1 13 113 7 114 9
+1 4 0 30 36 35 38
+1 5 0 30 40 35 42
+0 1 7 37 36 38 38
+1 7 0 65 36 69 38
+1 6 0 65 40 70 42
+0 1 9 71 36 74 38
+0 0 70 40 74 42
+1 10 0 107 28 111 30
+1 8 0 107 32 112 34
+1 9 0 107 36 112 38
+0 1 16 114 28 115 30
+1 15 0 135 16 137 18
+1 18 0 135 20 137 22
+0 1 12 142 16 143 18
+[CON]
+
+(*@KEY@: END_WORKSHEET *)
+(*@KEY@: WORKSHEET
+NAME: PAD_P_DCU_IN
+IEC_LANGUAGE: FBD
+*)
+[GRA]
+400 450 0 0 0 0 0 
+
+[LIT]
+63
+26 43 31 43 0 ""
+17 18 28 18 0 ""
+21 55 27 55 0 ""
+28 363 41 363 0 ""
+28 367 41 367 0 ""
+28 347 41 347 0 ""
+28 351 41 351 0 ""
+28 355 41 355 0 ""
+28 359 41 359 0 ""
+25 291 29 291 0 ""
+82 291 86 291 0 ""
+86 268 88 268 0 ""
+25 306 29 306 0 ""
+19 277 23 277 0 ""
+19 269 23 269 0 ""
+92 253 93 253 0 ""
+87 236 91 236 0 ""
+27 236 31 236 0 ""
+80 321 91 321 0 ""
+25 321 27 321 0 ""
+27 321 27 322 0 ""
+27 322 29 322 0 ""
+27 331 33 331 0 ""
+18 8 27 8 0 ""
+19 22 28 22 0 ""
+24 47 31 47 0 ""
+23 59 28 59 0 ""
+25 107 41 107 0 ""
+25 131 41 131 0 ""
+27 155 41 155 0 ""
+26 179 41 179 0 ""
+29 205 41 205 0 ""
+35 227 41 227 0 ""
+23 240 31 240 0 ""
+85 240 91 240 0 ""
+22 251 39 251 0 ""
+23 257 39 257 0 ""
+90 257 93 257 0 ""
+20 273 25 273 0 ""
+20 281 25 281 0 ""
+82 272 88 272 0 ""
+25 295 29 295 0 ""
+84 295 89 295 0 ""
+24 310 29 310 0 ""
+25 325 29 325 0 ""
+81 325 91 325 0 ""
+25 334 34 334 0 ""
+93 347 98 347 0 ""
+93 351 98 351 0 ""
+94 355 98 355 0 ""
+93 360 98 360 0 ""
+93 364 98 364 0 ""
+93 369 96 369 0 ""
+44 216 46 216 0 ""
+41 216 44 216 0 ""
+44 216 44 220 0 ""
+44 220 45 220 0 ""
+27 227 35 227 0 ""
+35 227 35 230 0 ""
+35 230 44 230 0 ""
+35 379 50 379 0 ""
+35 384 50 384 0 ""
+36 416 58 416 0 ""
+
+[TET]
+157
+10 17 17 19 4 5 XMd
+28 17 59 19 4 3 PAD_DcuStatus.SGenSystemMode
+10 42 26 44 4 5 SEmEgrDevOpr
+31 42 56 44 4 3 PAD_DcuStatus.SEmEgrAct
+10 54 21 56 4 5 SEmAccss
+27 54 52 56 4 3 PAD_DcuStatus.SEmAcsAct
+16 89 54 92 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+door is closed and locked,release unknown
+10 197 21 199 4 5 USINT#5
+22 185 39 188 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+door is released
+41 193 64 195 4 3 PAD_DcuStatus.SDrsRlsd
+12 235 27 237 4 5 SLkdOutOfSrvc
+16 231 34 234 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+door is locked out
+31 235 58 237 4 3 PAD_DcuStatus.SDrsLckdOut
+77 230 118 233 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+obstacle is detected during closing or opening
+91 235 123 237 4 3 PAD_DcuStatus.SObstacleDetected
+11 250 22 252 4 5 SOpSqAct
+39 250 66 252 4 3 PAD_DcuStatus.SDrsOpening
+12 246 28 249 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+door is opening
+82 252 92 254 4 5 SClSwAct
+93 252 119 254 4 3 PAD_DcuStatus.SDrsClosing
+82 247 97 250 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+door is closing
+76 235 87 237 4 5 SObstDet
+23 268 48 270 4 3 PAD_DcuStatus.SDrsErrorA
+23 276 48 278 4 3 PAD_DcuStatus.SDrsErrorB
+12 268 19 270 4 5 SFltA
+12 276 19 278 4 5 SFltB
+13 263 43 266 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+diagnostic error, priority A and B
+73 267 86 269 4 5 SCrewSwOp
+76 263 99 266 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+crew switch is operated
+88 267 114 269 4 3 PAD_DcuStatus.SDrsCrewSw
+27 7 44 9 4 3 PAD_DcuStatusV
+9 3 66 6 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+life sign error, communication between CCUO and DCU is broken
+10 50 41 53 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+door emergency access is active
+10 38 41 41 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+door emergency egress is active
+9 13 29 16 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+door system mode
+16 111 49 114 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+Door is inhibited due to a PED failure
+10 147 21 149 4 5 USINT#3
+41 119 71 121 4 3 PAD_DcuStatusExt.DrsInhPEDErr
+10 219 21 221 4 5 USINT#6
+15 208 50 211 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+door is opened (not in closed position)
+46 215 70 217 4 3 PAD_DcuStatus.SDrsOpnd
+17 290 25 292 4 5 SOpPb
+75 290 82 292 4 5 SClFb
+73 285 101 288 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+feedback from doors close Pb
+86 290 108 292 4 3 PAD_DcuStatus.SClsDrs
+17 305 25 307 4 5 SRelFb
+14 301 44 304 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+feedback from doors release Pb
+29 305 51 307 4 3 PAD_DcuStatus.SRelDrs
+10 171 21 173 4 5 USINT#4
+19 160 43 163 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+Door is inhibited by driver
+41 167 63 169 4 3 PAD_DcuStatus.SDrInh
+10 99 21 101 4 5 USINT#1
+41 96 66 98 4 3 PAD_DcuStatus.SDrsClsLck
+54 77 62 79 4 3 XStsW
+7 77 14 79 4 5 XSts
+13 96 21 98 4 5 XStsW
+13 120 21 122 4 5 XStsW
+10 123 21 125 4 5 USINT#2
+13 144 21 146 4 5 XStsW
+13 168 21 170 4 5 XStsW
+13 194 21 196 4 5 XStsW
+13 216 21 218 4 5 XStsW
+41 143 65 145 4 3 PAD_DcuStatus.SDiRelDrs
+11 67 45 70 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+extract each bit meaning out of XSts
+21 136 46 139 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+Door is inhibited by ASDO
+16 346 28 348 4 5 SBurninAct
+17 350 28 352 4 5 SBurninOk
+14 354 28 356 4 5 SBurninNotOk
+29 290 53 292 4 3 PAD_DcuStatusExt.SPbOp
+18 285 39 288 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+door local Pb pressed
+21 358 28 360 4 5 SClFlt
+41 346 69 348 4 3 PAD_DcuStatusExt.SBurninAct
+41 354 71 356 4 3 PAD_DcuStatusExt.SBurninNotOk
+41 350 68 352 4 3 PAD_DcuStatusExt.SBurninOk
+41 358 64 360 4 3 PAD_DcuStatusExt.SClFlt
+41 362 67 364 4 3 PAD_DcuStatusExt.SClLckFlt
+18 362 28 364 4 5 SClLckFlt
+14 366 28 368 4 5 STrnAtSpdFb
+41 366 71 368 4 3 PAD_DcuStatusExt.STrnAtSpdFb
+28 21 60 23 4 3 PAD_DcuStatus.SGenSystemModeV
+31 46 57 48 4 3 PAD_DcuStatus.SEmEgrActV
+28 58 55 60 4 3 PAD_DcuStatus.SEmAcsActV
+41 106 67 108 4 3 PAD_DcuStatus.SDrsClsLckV
+41 154 66 156 4 3 PAD_DcuStatus.SDiRelDrsV
+41 178 64 180 4 3 PAD_DcuStatus.SDrInhV
+41 204 65 206 4 3 PAD_DcuStatus.SDrsRlsdV
+41 226 67 228 4 3 PAD_DcuStatus.SDrsOpndV
+31 239 59 241 4 3 PAD_DcuStatus.SDrsLckdOutV
+91 239 124 241 4 3 PAD_DcuStatus.SObstacleDetectedV
+39 256 67 258 4 3 PAD_DcuStatus.SDrsOpeningV
+93 256 120 258 4 3 PAD_DcuStatus.SDrsClosingV
+25 272 51 274 4 3 PAD_DcuStatus.SDrsErrorAV
+25 280 51 282 4 3 PAD_DcuStatus.SDrsErrorBV
+88 271 115 273 4 3 PAD_DcuStatus.SDrsCrewSwV
+89 294 112 296 4 3 PAD_DcuStatus.SClsDrsV
+29 309 53 311 4 3 PAD_DcuStatus.SRelDrsV
+41 130 72 132 4 3 PAD_DcuStatusExt.DrsInhPEDErrV
+29 294 54 296 4 3 PAD_DcuStatusExt.SPbOpV
+98 346 127 348 4 3 PAD_DcuStatusExt.SBurninActV
+98 350 126 352 4 3 PAD_DcuStatusExt.SBurninOkV
+98 354 129 356 4 3 PAD_DcuStatusExt.SBurninNotOkV
+98 359 122 361 4 3 PAD_DcuStatusExt.SClFltV
+98 363 125 365 4 3 PAD_DcuStatusExt.SClLckFltV
+96 368 127 370 4 3 PAD_DcuStatusExt.STrnAtSpdFbV
+14 320 25 322 4 5 SOpPosFlt
+14 316 47 319 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+door open failure within certain time
+29 321 59 323 4 3 PAD_DcuStatusExt.SDrsOpPosFlt
+29 324 60 326 4 3 PAD_DcuStatusExt.SDrsOpPosFltV
+70 320 80 322 4 5 SClPosFlt
+74 315 107 318 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+door close failure within certain time
+91 320 117 322 4 3 PAD_DcuStatusExt.SClPosFlt
+91 324 118 326 4 3 PAD_DcuStatusExt.SClPosFltV
+16 330 27 332 4 5 STrnCtrlFlt
+33 330 60 332 4 3 PAD_DcuStatusExt.STrnCtrlFlt
+34 333 62 335 4 3 PAD_DcuStatusExt.STrnCtrlFltV
+7 7 18 9 4 5 SDcuValid
+8 21 19 23 4 5 SDcuValid
+13 46 24 48 4 5 SDcuValid
+12 58 23 60 4 5 SDcuValid
+14 106 25 108 4 5 SDcuValid
+14 130 25 132 4 5 SDcuValid
+16 154 27 156 4 5 SDcuValid
+15 178 26 180 4 5 SDcuValid
+18 204 29 206 4 5 SDcuValid
+16 226 27 228 4 5 SDcuValid
+12 239 23 241 4 5 SDcuValid
+74 239 85 241 4 5 SDcuValid
+12 256 23 258 4 5 SDcuValid
+79 256 90 258 4 5 SDcuValid
+9 272 20 274 4 5 SDcuValid
+9 280 20 282 4 5 SDcuValid
+71 271 82 273 4 5 SDcuValid
+14 294 25 296 4 5 SDcuValid
+73 294 84 296 4 5 SDcuValid
+13 309 24 311 4 5 SDcuValid
+14 324 25 326 4 5 SDcuValid
+70 324 81 326 4 5 SDcuValid
+14 333 25 335 4 5 SDcuValid
+82 346 93 348 4 5 SDcuValid
+82 350 93 352 4 5 SDcuValid
+83 354 94 356 4 5 SDcuValid
+82 359 93 361 4 5 SDcuValid
+82 363 93 365 4 5 SDcuValid
+82 368 93 370 4 5 SDcuValid
+45 219 72 221 4 3 PAD_DcuStatusExt.SDrsOpnd
+44 229 72 231 4 3 PAD_DcuStatusExt.SDrsOpndV
+15 378 35 380 4 5 PAD_DcuIn.SCndtMd
+14 383 35 385 4 5 PAD_DcuIn.SCndtMdV
+50 378 74 380 4 3 PAD_DcuStatus.SCndtMd
+50 383 75 385 4 3 PAD_DcuStatus.SCndtMdV
+15 373 38 376 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+Conductor Mode Active
+19 394 32 396 4 5 SDragActive
+21 398 32 400 4 5 SDcuValid
+44 394 71 396 4 3 PAD_DcuStatus.SDrsDrgDtcd
+15 387 46 390 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;Tahoma 
+Drag Detection Status from DCU
+58 415 86 417 4 3 PAD_DcuStatus.SDrsDrgDtcdV
+25 415 36 417 4 5 SDcuValid
+
+[FBS]
+9
+458775 196701 39 104 1 0 BTAL_GetBitWord @  
+196624 196682 32 82 1 0 USINT_TO_BYTE @  
+196644 196682 52 82 1 0 BYTE_TO_WORD @  
+458775 196724 39 128 1 0 BTAL_GetBitWord @  
+458775 196748 39 152 1 0 BTAL_GetBitWord @  
+458775 196772 39 176 1 0 BTAL_GetBitWord @  
+458775 196798 39 202 1 0 BTAL_GetBitWord @  
+458775 196820 39 224 1 0 BTAL_GetBitWord @  
+262178 196999 42 403 1 0 AND @  
+
+[FPT]
+31
+23 94 31 96 Enable 0 0 0 0 4097 0 TRUE BOOL 
+23 99 30 101 BitPos 0 0 0 0 4224 0 @ USINT 
+23 96 30 98 BitSet 0 0 0 0 4224 0 @ WORD 
+38 96 39 98 BTAL_GetBitWord 0 0 0 1 0 4737 @ BOOL 
+16 77 18 79 IN 0 0 0 0 4736 0 @ USINT 
+31 77 32 79 USINT_TO_BYTE 0 0 0 1 0 4736 @ BYTE 
+36 77 38 79 IN 0 0 0 0 4736 0 @ BYTE 
+51 77 52 79 BYTE_TO_WORD 0 0 0 1 0 4736 @ WORD 
+23 117 31 119 Enable 0 0 0 0 4097 0 TRUE BOOL 
+23 123 30 125 BitPos 0 0 0 0 4224 0 @ USINT 
+23 120 30 122 BitSet 0 0 0 0 4224 0 @ WORD 
+38 119 39 121 BTAL_GetBitWord 0 0 0 1 0 4737 @ BOOL 
+23 141 31 143 Enable 0 0 0 0 4097 0 TRUE BOOL 
+23 147 30 149 BitPos 0 0 0 0 4224 0 @ USINT 
+23 144 30 146 BitSet 0 0 0 0 4224 0 @ WORD 
+38 143 39 145 BTAL_GetBitWord 0 0 0 1 0 4737 @ BOOL 
+23 165 31 167 Enable 0 0 0 0 4097 0 TRUE BOOL 
+23 171 30 173 BitPos 0 0 0 0 4224 0 @ USINT 
+23 168 30 170 BitSet 0 0 0 0 4224 0 @ WORD 
+38 167 39 169 BTAL_GetBitWord 0 0 0 1 0 4737 @ BOOL 
+23 191 31 193 Enable 0 0 0 0 4097 0 TRUE BOOL 
+23 197 30 199 BitPos 0 0 0 0 4224 0 @ USINT 
+23 194 30 196 BitSet 0 0 0 0 4224 0 @ WORD 
+38 193 39 195 BTAL_GetBitWord 0 0 0 1 0 4737 @ BOOL 
+23 213 31 215 Enable 0 0 0 0 4097 0 TRUE BOOL 
+23 219 30 221 BitPos 0 0 0 0 4224 0 @ USINT 
+23 216 30 218 BitSet 0 0 0 0 4224 0 @ WORD 
+38 215 39 217 BTAL_GetBitWord 0 0 0 1 0 4737 @ BOOL 
+34 394 39 396 IN1 2 0 0 0 1153 0 @ ANY_BIT 
+34 398 39 400 IN2 2 0 0 0 1153 0 @ ANY_BIT 
+41 394 42 396 OUT 0 0 0 1 0 641 @ ANY_BIT 
+
+[AKT]
+0
+
+[STT]
+0
+
+[TRT]
+0
+
+[KOT]
+0
+
+[VER]
+0
+
+[IBX]
+0
+
+[CON]
+1
+260
+1 65 1 66 26 43 31 43
+1 63 1 64 17 18 28 18
+1 67 1 68 21 55 27 55
+1 139 1 138 28 363 41 363
+1 140 1 141 28 367 41 367
+1 128 1 134 28 347 41 347
+1 129 1 136 28 351 41 351
+1 130 1 135 28 355 41 355
+1 133 1 137 28 359 41 359
+1 104 1 131 25 291 29 291
+1 105 1 107 82 291 86 291
+1 90 1 92 86 268 88 268
+1 108 1 110 25 306 29 306
+1 88 1 86 19 277 23 277
+1 87 1 85 19 269 23 269
+1 81 1 82 92 253 93 253
+1 84 1 77 87 236 91 236
+1 73 1 75 27 236 31 236
+1 171 1 173 80 321 91 321
+1 167 1 20 25 321 27 321
+1 19 1 21 27 321 27 322
+1 20 1 169 27 322 29 322
+1 175 1 176 27 331 33 331
+1 178 1 93 18 8 27 8
+1 179 1 142 19 22 28 22
+1 180 1 143 24 47 31 47
+1 181 1 144 23 59 28 59
+1 182 1 145 25 107 41 107
+1 183 1 159 25 131 41 131
+1 184 1 146 27 155 41 155
+1 185 1 147 26 179 41 179
+1 186 1 148 29 205 41 205
+2 57 58 1 149 35 227 41 227
+1 188 1 150 23 240 31 240
+1 189 1 151 85 240 91 240
+1 78 1 79 22 251 39 251
+1 190 1 152 23 257 39 257
+1 191 1 153 90 257 93 257
+1 192 1 154 20 273 25 273
+1 193 1 155 20 281 25 281
+1 194 1 156 82 272 88 272
+1 195 1 160 25 295 29 295
+1 196 1 157 84 295 89 295
+1 197 1 158 24 310 29 310
+1 198 1 170 25 325 29 325
+1 199 1 174 81 325 91 325
+1 200 1 177 25 334 34 334
+1 201 1 161 93 347 98 347
+1 202 1 162 93 351 98 351
+1 203 1 163 94 355 98 355
+1 204 1 164 93 360 98 360
+1 205 1 165 93 364 98 364
+1 206 1 166 93 369 96 369
+2 54 55 1 103 44 216 46 216
+1 256 2 53 55 41 216 44 216
+2 53 54 1 56 44 216 44 220
+1 55 1 207 44 220 45 220
+1 187 2 32 58 27 227 35 227
+2 32 57 1 59 35 227 35 230
+1 58 1 208 35 230 44 230
+1 209 1 211 35 379 50 379
+1 210 1 212 35 384 50 384
+1 219 1 218 36 416 58 416
+0 1 1 10 17 17 19
+1 1 0 28 17 59 19
+0 1 0 10 42 26 44
+1 0 0 31 42 56 44
+0 1 2 10 54 21 56
+1 2 0 27 54 52 56
+0 0 16 89 54 92
+0 1 250 10 197 21 199
+0 0 22 185 39 188
+1 252 0 41 193 64 195
+0 1 17 12 235 27 237
+0 0 16 231 34 234
+1 17 0 31 235 58 237
+0 0 77 230 118 233
+1 16 0 91 235 123 237
+0 1 35 11 250 22 252
+1 35 0 39 250 66 252
+0 0 12 246 28 249
+0 1 15 82 252 92 254
+1 15 0 93 252 119 254
+0 0 82 247 97 250
+0 1 16 76 235 87 237
+1 14 0 23 268 48 270
+1 13 0 23 276 48 278
+0 1 14 12 268 19 270
+0 1 13 12 276 19 278
+0 0 13 263 43 266
+0 1 11 73 267 86 269
+0 0 76 263 99 266
+1 11 0 88 267 114 269
+1 23 0 27 7 44 9
+0 0 9 3 66 6
+0 0 10 50 41 53
+0 0 10 38 41 41
+0 0 9 13 29 16
+0 0 16 111 49 114
+0 1 242 10 147 21 149
+1 240 0 41 119 71 121
+0 1 254 10 219 21 221
+0 0 15 208 50 211
+1 53 0 46 215 70 217
+0 1 9 17 290 25 292
+0 1 10 75 290 82 292
+0 0 73 285 101 288
+1 10 0 86 290 108 292
+0 1 12 17 305 25 307
+0 0 14 301 44 304
+1 12 0 29 305 51 307
+0 1 246 10 171 21 173
+0 0 19 160 43 163
+1 248 0 41 167 63 169
+0 1 230 10 99 21 101
+1 232 0 41 96 66 98
+1 236 0 54 77 62 79
+0 1 233 7 77 14 79
+0 1 231 13 96 21 98
+0 1 239 13 120 21 122
+0 1 238 10 123 21 125
+0 1 243 13 144 21 146
+0 1 247 13 168 21 170
+0 1 251 13 194 21 196
+0 1 255 13 216 21 218
+1 244 0 41 143 65 145
+0 0 11 67 45 70
+0 0 21 136 46 139
+0 1 5 16 346 28 348
+0 1 6 17 350 28 352
+0 1 7 14 354 28 356
+1 9 0 29 290 53 292
+0 0 18 285 39 288
+0 1 8 21 358 28 360
+1 5 0 41 346 69 348
+1 7 0 41 354 71 356
+1 6 0 41 350 68 352
+1 8 0 41 358 64 360
+1 3 0 41 362 67 364
+0 1 3 18 362 28 364
+0 1 4 14 366 28 368
+1 4 0 41 366 71 368
+1 24 0 28 21 60 23
+1 25 0 31 46 57 48
+1 26 0 28 58 55 60
+1 27 0 41 106 67 108
+1 29 0 41 154 66 156
+1 30 0 41 178 64 180
+1 31 0 41 204 65 206
+1 32 0 41 226 67 228
+1 33 0 31 239 59 241
+1 34 0 91 239 124 241
+1 36 0 39 256 67 258
+1 37 0 93 256 120 258
+1 38 0 25 272 51 274
+1 39 0 25 280 51 282
+1 40 0 88 271 115 273
+1 42 0 89 294 112 296
+1 43 0 29 309 53 311
+1 28 0 41 130 72 132
+1 41 0 29 294 54 296
+1 47 0 98 346 127 348
+1 48 0 98 350 126 352
+1 49 0 98 354 129 356
+1 50 0 98 359 122 361
+1 51 0 98 363 125 365
+1 52 0 96 368 127 370
+0 1 19 14 320 25 322
+0 0 14 316 47 319
+1 21 0 29 321 59 323
+1 44 0 29 324 60 326
+0 1 18 70 320 80 322
+0 0 74 315 107 318
+1 18 0 91 320 117 322
+1 45 0 91 324 118 326
+0 1 22 16 330 27 332
+1 22 0 33 330 60 332
+1 46 0 34 333 62 335
+0 1 23 7 7 18 9
+0 1 24 8 21 19 23
+0 1 25 13 46 24 48
+0 1 26 12 58 23 60
+0 1 27 14 106 25 108
+0 1 28 14 130 25 132
+0 1 29 16 154 27 156
+0 1 30 15 178 26 180
+0 1 31 18 204 29 206
+0 1 57 16 226 27 228
+0 1 33 12 239 23 241
+0 1 34 74 239 85 241
+0 1 36 12 256 23 258
+0 1 37 79 256 90 258
+0 1 38 9 272 20 274
+0 1 39 9 280 20 282
+0 1 40 71 271 82 273
+0 1 41 14 294 25 296
+0 1 42 73 294 84 296
+0 1 43 13 309 24 311
+0 1 44 14 324 25 326
+0 1 45 70 324 81 326
+0 1 46 14 333 25 335
+0 1 47 82 346 93 348
+0 1 48 82 350 93 352
+0 1 49 83 354 94 356
+0 1 50 82 359 93 361
+0 1 51 82 363 93 365
+0 1 52 82 368 93 370
+1 56 0 45 219 72 221
+1 59 0 44 229 72 231
+0 1 60 15 378 35 380
+0 1 61 14 383 35 385
+1 60 0 50 378 74 380
+1 61 0 50 383 75 385
+0 0 15 373 38 376
+0 1 257 19 394 32 396
+0 1 258 21 398 32 400
+1 259 0 44 394 71 396
+0 0 15 387 46 390
+1 62 0 58 415 86 417
+0 1 62 25 415 36 417
+0 0 23 93 39 104
+0 0 16 74 32 82
+0 0 36 74 52 82
+0 0 23 116 39 128
+0 0 23 140 39 152
+0 0 23 164 39 176
+0 0 23 190 39 202
+0 0 23 212 39 224
+0 0 34 391 42 403
+0 0 23 94 31 96
+1 114 0 23 99 30 101
+1 118 0 23 96 30 98
+0 1 115 38 96 39 98
+1 117 0 16 77 18 79
+0 1 235 31 77 32 79
+1 234 0 36 77 38 79
+0 1 116 51 77 52 79
+0 0 23 117 31 119
+1 120 0 23 123 30 125
+1 119 0 23 120 30 122
+0 1 100 38 119 39 121
+0 0 23 141 31 143
+1 99 0 23 147 30 149
+1 121 0 23 144 30 146
+0 1 125 38 143 39 145
+0 0 23 165 31 167
+1 111 0 23 171 30 173
+1 122 0 23 168 30 170
+0 1 113 38 167 39 169
+0 0 23 191 31 193
+1 70 0 23 197 30 199
+1 123 0 23 194 30 196
+0 1 72 38 193 39 195
+0 0 23 213 31 215
+1 101 0 23 219 30 221
+1 124 0 23 216 30 218
+0 1 54 38 215 39 217
+1 214 0 34 394 39 396
+1 215 0 34 398 39 400
+0 1 216 41 394 42 396
+[CON]
+
+(*@KEY@: END_WORKSHEET *)
+(*@KEY@: WORKSHEET
+NAME: SigNeedToBeUsed
+IEC_LANGUAGE: FBD
+*)
+[GRA]
+400 400 0 0 0 0 0 
+
+[LIT]
+12
+29 7 45 7 0 ""
+22 10 37 10 0 ""
+21 13 37 13 0 ""
+22 16 36 16 0 ""
+21 20 36 20 0 ""
+21 23 36 23 0 ""
+21 26 36 26 0 ""
+24 39 35 39 0 ""
+21 44 35 44 0 ""
+73 16 86 16 0 ""
+75 20 86 20 0 ""
+74 25 87 25 0 ""
+
+[TET]
+26
+45 6 54 8 9 4 END
+10 6 29 8 4 5 EnSigNeedToBeSkip
+11 2 46 5 65536 6 4 0 237 255 0 0 0 0 0 &#x1D;TechnicBold 
+To make sure values not overwritten 
+13 51 19 53 10 4 END
+13 9 22 11 4 5 XSwVer
+12 12 21 14 4 5 XSwRel
+12 15 22 17 4 5 XSwUpd
+12 19 21 21 4 5 XSwEvo
+12 22 21 24 4 5 XHwVer
+12 25 21 27 4 5 XHwRel
+11 38 24 40 4 5 XDevAppMd
+11 43 21 45 4 5 XDevCfg
+62 15 73 17 4 5 SSrvcPbFlt
+62 19 75 21 4 5 SBusComFlt
+37 9 46 11 4 3 XSwVer
+37 12 46 14 4 3 XSwRel
+36 15 46 17 4 3 XSwUpd
+36 19 45 21 4 3 XSwEvo
+36 22 45 24 4 3 XHwVer
+36 25 45 27 4 3 XHwRel
+35 38 48 40 4 3 XDevAppMd
+35 43 45 45 4 3 XDevCfg
+86 15 97 17 4 3 SSrvcPbFlt
+86 19 99 21 4 3 SBusComFlt
+63 24 74 26 4 5 SSdoEnFlt
+87 24 98 26 4 3 SSdoEnFlt
+
+[FBS]
+0
+
+[FPT]
+0
+
+[AKT]
+0
+
+[STT]
+0
+
+[TRT]
+0
+
+[KOT]
+0
+
+[VER]
+0
+
+[IBX]
+0
+
+[CON]
+1
+38
+1 13 1 12 29 7 45 7
+1 16 1 26 22 10 37 10
+1 17 1 27 21 13 37 13
+1 18 1 28 22 16 36 16
+1 19 1 29 21 20 36 20
+1 20 1 30 21 23 36 23
+1 21 1 31 21 26 36 26
+1 22 1 32 24 39 35 39
+1 23 1 33 21 44 35 44
+1 24 1 34 73 16 86 16
+1 25 1 35 75 20 86 20
+1 36 1 37 74 25 87 25
+1 0 0 45 6 54 8
+0 1 0 10 6 29 8
+0 0 11 2 46 5
+0 0 13 51 19 53
+0 1 1 13 9 22 11
+0 1 2 12 12 21 14
+0 1 3 12 15 22 17
+0 1 4 12 19 21 21
+0 1 5 12 22 21 24
+0 1 6 12 25 21 27
+0 1 7 11 38 24 40
+0 1 8 11 43 21 45
+0 1 9 62 15 73 17
+0 1 10 62 19 75 21
+1 1 0 37 9 46 11
+1 2 0 37 12 46 14
+1 3 0 36 15 46 17
+1 4 0 36 19 45 21
+1 5 0 36 22 45 24
+1 6 0 36 25 45 27
+1 7 0 35 38 48 40
+1 8 0 35 43 45 45
+1 9 0 86 15 97 17
+1 10 0 86 19 99 21
+0 1 11 63 24 74 26
+1 11 0 87 24 98 26
+[CON]
+
+(*@KEY@: END_WORKSHEET *)
+END_PROGRAM
+]]></iec-data>
+ <interface>
+  <variable-group name="Local"/>
+  <variable-group name="IN validity">
+   <variable name="Enable_FA" array-size="1" type="MWT_BOOL" usage="input">
+    <comment><![CDATA[Enable PAD FA]]></comment>
+   </variable>
+  </variable-group>
+  <variable-group name="DOORS_in">
+   <variable name="XSwVer" array-size="1" type="MWT_USINT" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_XSwVer">
+    <comment><![CDATA[System software version; Incremented if new SW is incompatible to previous SW version or hardware.; Default : 0]]></comment>
+   </variable>
+   <variable name="XSwRel" array-size="1" type="MWT_USINT" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_XSwRel">
+    <comment><![CDATA[System software release;  Incremented if new SW has major changes or additional functions but is still compatible.; Default : 0]]></comment>
+   </variable>
+   <variable name="XSwUpd" array-size="1" type="MWT_USINT" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_XSwUpd">
+    <comment><![CDATA[System software update; Incremented if new SW with minor modifications during elaboration ; Default : 0]]></comment>
+   </variable>
+   <variable name="XSwEvo" array-size="1" type="MWT_USINT" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_XSwEvo">
+    <comment><![CDATA[System software evolution; Incremented if new SW is for testing (not validated); Default : 0]]></comment>
+   </variable>
+   <variable name="XHwVer" array-size="1" type="MWT_USINT" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_XHwVer">
+    <comment><![CDATA[System hardware version ; Basic functional changes, incompatible to previous HW versions (e.g. change in firmware, I/O). ; Default : 0]]></comment>
+   </variable>
+   <variable name="XHwRel" array-size="1" type="MWT_USINT" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_XHwRel">
+    <comment><![CDATA[System hardware release ; Minor changes. Still compatible; Default : 0]]></comment>
+   </variable>
+   <variable name="XLifeSign_1" array-size="1" type="MWT_INT" usage="input">
+    <comment><![CDATA[System shall set this counter to zero after reset including power-up and increment it with every telegram cycle.]]></comment>
+   </variable>
+   <variable name="XLifeSign_2" array-size="1" type="MWT_INT" usage="input">
+    <comment><![CDATA[System shall set this counter to zero after reset including power-up and increment it with every telegram cycle.]]></comment>
+   </variable>
+   <variable name="XDevAppMd" array-size="1" type="MWT_USINT" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_XDevAppMd">
+    <comment><![CDATA[Device application mode]]></comment>
+   </variable>
+   <variable name="XDevCfg" array-size="1" type="MWT_USINT" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_XDevCfg">
+    <comment><![CDATA[Device configuration]]></comment>
+   </variable>
+   <variable name="XMd" array-size="1" type="MWT_USINT" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_XMd">
+    <comment><![CDATA[Door mode. Default : 1]]></comment>
+   </variable>
+   <variable name="XSts" array-size="1" type="MWT_USINT" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_XSts">
+    <comment><![CDATA[Door Status; Clarification of Signals:; Bit 0: Door Closed & Locked (either released or not released); Bit 1: Door is inhibited due to a PED failure; Bit 2: Door is inhibited due to SDO ; Bit 3: Door is inhibited by the Driver; Bit 4: Door is either open or closed and is released.; Bit 5: Door is not in closed position; Bit 6: Door has been unlocked using either EED or EAD; Default : 0]]></comment>
+   </variable>
+   <variable name="SEmEgrDevOpr" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SEmEgrDevOpr">
+    <comment><![CDATA[Emergency Egress Device Operated]]></comment>
+   </variable>
+   <variable name="SEmAccss" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SEmAccss">
+    <comment><![CDATA[Emergency Access Device Operated]]></comment>
+   </variable>
+   <variable name="SLkdOutOfSrvc" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SLkdOutOfSrvc">
+    <comment><![CDATA[Door Locked Out of Service]]></comment>
+   </variable>
+   <variable name="SFltA" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SFltA">
+    <comment><![CDATA[Door Fault - priority A; Summary fault signal in case any priority A diagnostic code is set in the EDCU; Used as the signal to inform the driver when to isolate the door from opening]]></comment>
+   </variable>
+   <variable name="SFltB" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SFltB">
+    <comment><![CDATA[Door Fault - priority B; Summary fault signal in case any priority B diagnostic code is set in the EDCU]]></comment>
+   </variable>
+   <variable name="SOpSqAct" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SOpSqAct">
+    <comment><![CDATA[Door Opening sequence active.]]></comment>
+   </variable>
+   <variable name="SClSwAct" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SClSwAct">
+    <comment><![CDATA[Door Closing sequence active.]]></comment>
+   </variable>
+   <variable name="STrnAtSpdFb" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_STrnAtSpdFb">
+    <comment><![CDATA[Feedback of Input 3; (Train at Speed)]]></comment>
+   </variable>
+   <variable name="SRelFb" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SRelFb">
+    <comment><![CDATA[Feedback of Input 4; (Door Release)]]></comment>
+   </variable>
+   <variable name="SClFb" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SClFb">
+    <comment><![CDATA[Feedback of Input 5; (Door Close)]]></comment>
+   </variable>
+   <variable name="SOpPb" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SOpPb">
+    <comment><![CDATA[Door Open Pushbutton]]></comment>
+   </variable>
+   <variable name="SObstDet" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SObstDet">
+    <comment><![CDATA[Obstacle detected ; Signal is set TRUE as soon as an obstacle is detected either during opening or closing sequence ; Signal is reset to FALSE when door moves to Closed & Locked position.]]></comment>
+   </variable>
+   <variable name="SBurninAct" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SBurninAct">
+    <comment><![CDATA[Burn In test (door cycling) is active.]]></comment>
+   </variable>
+   <variable name="SBurninOk" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SBurninOk">
+    <comment><![CDATA[Burn In test (door cycling) passed.; Last Burn in test was successful: door cycling completed without any failure detected.]]></comment>
+   </variable>
+   <variable name="SBurninNotOk" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SBurninNotOk">
+    <comment><![CDATA[Burn In test (door cycling) not passed.; Last Burn in test was not successful: door cycling not completed correctly (aborted or door fault detected).]]></comment>
+   </variable>
+   <variable name="SCrewSwOp" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SCrewSwOp">
+    <comment><![CDATA[Crew key switch open is operated. Signal type: Steady signal.]]></comment>
+   </variable>
+   <variable name="SClLckFlt" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SClLckFlt">
+    <comment><![CDATA[Door leaves the closed & locked position without permission.]]></comment>
+   </variable>
+   <variable name="SSrvcPbFlt" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SSrvcPbFlt">
+    <comment><![CDATA[Service Button on the DCU fails for a duration of 1 minute.]]></comment>
+   </variable>
+   <variable name="SBusComFlt" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SBusComFlt">
+    <comment><![CDATA[Bus communication fails ; Signals and functions via bus are no longer available]]></comment>
+   </variable>
+   <variable name="SSdoEnFlt" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SSdoEnFlt">
+    <comment><![CDATA[SDO Enable Hardware & SDO Enable Software Mismatch 1; H/W SDO Enable =1 (I01) & S/W SDO Enable = 0 for 5s; OR; H/W SDO Enable =0 (I01) & S/W SDO Enable = 1 for 5s]]></comment>
+   </variable>
+   <variable name="SClFlt" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SClFlt">
+    <comment><![CDATA[Door Closed HW & Door Close SW commands mismatch; - H/W close input (I05) changes to TRUE and S/W close signal is not detected TRUE within 5sec; OR;  - S/W close signal changes to TRUE and H/W close input (I05) is not detected TRUE within 5sec]]></comment>
+   </variable>
+   <variable name="SOpPosFlt" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SOpPosFlt">
+    <comment><![CDATA[System does not detect opened position within a defined time]]></comment>
+   </variable>
+   <variable name="SClPosFlt" array-size="1" type="MWT_BOOL" usage="input">
+    <comment><![CDATA[System does not detect closed position within a defined time]]></comment>
+   </variable>
+   <variable name="STrnCtrlFlt" array-size="1" type="MWT_BOOL" usage="input">
+    <comment><![CDATA[SIgnals from the Train Control are faulty; Door release signal active (I04) and Train at speed]]></comment>
+   </variable>
+   <variable name="PAD_DcuIn" array-size="1" type="PadFDcuIn" usage="input">
+    <comment><![CDATA[Individual DCU input- additional variable for project]]></comment>
+   </variable>
+   <variable name="SDragActive" array-size="1" type="MWT_BOOL" usage="input" connect-name="CI_&lt;car&gt;DCU&lt;door&gt;_SDrgAct">
+    <comment><![CDATA[Signal drom DCU input-drag detection on door instance]]></comment>
+   </variable>
+  </variable-group>
+  <variable-group name=" OUT to generic SW (consist level)">
+   <variable name="PAD_DcuStatus" array-size="1" type="PadGDcuStatus" usage="output">
+    <comment><![CDATA[status from door in car]]></comment>
+   </variable>
+   <variable name="PAD_DcuStatusV" array-size="1" type="MWT_BOOL" usage="output">
+    <comment><![CDATA[status from door  in car  valid bit]]></comment>
+   </variable>
+   <variable name="PAD_DcuStatusExt" array-size="1" type="PadFDcuStatusExt" usage="output">
+    <comment><![CDATA[status from door in car]]></comment>
+   </variable>
+  </variable-group>
+ </interface>
+</pou>

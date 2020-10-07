@@ -106,7 +106,7 @@ def main2():
 
 
 
-    # TODO: Call comparative functions from comp component
+
     #  -- From project signals,
 
 

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created 2019-09-09 18:07:59 by ajsaini on BTIS1000081542 using MTPE-5.3.0.1 -->
+<!-- File: D:/Generic Sandboxx/PAD_P_LOTRAIN/MTPE/components/PAD_P_LOTRAIN/PAD_P_TrnCfg.mtx -->
+<pou name="PAD_P_TrnCfg" version="1.0.0.0" type="ST" sub-type="Program" user-build="0">
+ <iec-data><![CDATA[(*@PROPERTIES_EX@
+TYPE: POU
+LOCALE: 0
+IEC_LANGUAGE: ST
+PLC_TYPE: PowerPC
+PROC_TYPE: independent
+GROUP: PAD.PAD_F_Aventra.Config
+*)
+(*@KEY@:DESCRIPTION*)
+------------------------------------------------------------------------------------
+COPYRIGHT       :  (c) 2017 Bombardier Inc. or its subsidiaries. All rights reserved.
+------------------------------------------------------------------------------------
+
+name            :      PAD_P_TrnCfg
+category        :      Program POU PAD family
+
+revision log    :
+version   : prepared   : creator (dept.)                : action (short)
+1.0.0.3   : 2019-09-09 : Rene Klein                     : PCSetDrsClsdLckd value changed BYTE#2#01000001 to BYTE#2#00000001, Defect 360495
+1.0.0.2   : 2019-01-04 : Aditya Karmarkar (RoQ/TDC)     :  Defect 256269, Updated parameter CFG_PadTrnCtrlCfg.PCSetDrsClsdLckd from BYTE#2#00011001 to BYTE#2#01000001
+1.0.0.1	  : 2017-11-27 : Peter Schenk (RoQ/TPD			: correction of missing and doubled data
+1.0.0.0   : 2017-02-27 : slemke (RoQ)                   : first issue
+
+description:
+project specific values for config parameters for consist component for PAD
+for not changed values input init (input) shall be written to the output without change.
+
+
+* REMARKS : ANY CHANGES MADE TO THIS FILE WILL BE LOST WHEN RE-GENERATING IT!!! *
+
+Created with : Configuration generator Version: 1.3.0.0 From: 2016-02-26
+(*@KEY@:END_DESCRIPTION*)
+PROGRAM PAD_P_TrnCfg
+
+(*Group:OUT*)
+
+
+VAR_OUTPUT
+	CFG_PadTrnCtrlCfg :	PadGTrnCtrlCfg;(*configuration information for the train controller*)
+END_VAR
+
+
+(*@KEY@: WORKSHEET
+NAME: PAD_P_TrnCfg
+IEC_LANGUAGE: ST
+*)
+(* init parameters *)
+CFG_PadTrnCtrlCfg.PCanExist01 :=WORD#16#F;
+CFG_PadTrnCtrlCfg.PCanExist02 :=WORD#16#0;
+CFG_PadTrnCtrlCfg.PCSetDrsClsTrnCond :=BYTE#1;
+CFG_PadTrnCtrlCfg.PCSetDrsOpnTrnCond :=BYTE#128;
+CFG_PadTrnCtrlCfg.PCSetDrsPreRelTrnCond :=BYTE#0;
+CFG_PadTrnCtrlCfg.PCSetDrsRelTrnCond :=BYTE#141;
+CFG_PadTrnCtrlCfg.PCSetDrsSideSelCond := BYTE#2#00000001;(*Cab active*)
+CFG_PadTrnCtrlCfg.PCRstDrsSideSelCond := BYTE#2#10010000; (* close + specfic cond*)
+CFG_PadTrnCtrlCfg.PEnCentralOpn := TRUE;
+CFG_PadTrnCtrlCfg.PEnCentralOpnMon := TRUE;
+CFG_PadTrnCtrlCfg.PEnCentralOpnInd := TRUE;
+CFG_PadTrnCtrlCfg.PEnDrsOpndInd := TRUE;
+CFG_PadTrnCtrlCfg.PEnDrsOpndMon := TRUE;
+CFG_PadTrnCtrlCfg.PEnRelDrs:=TRUE;
+CFG_PadTrnCtrlCfg.PEnRelDrsMon:=TRUE;
+CFG_PadTrnCtrlCfg.PEnRelDrsInd:=TRUE;
+CFG_PadTrnCtrlCfg.PEnDrsRlsdInd := TRUE;
+CFG_PadTrnCtrlCfg.PEnDrsRlsdMon := TRUE;
+CFG_PadTrnCtrlCfg.PEnClsDrs := TRUE;
+CFG_PadTrnCtrlCfg.PEnRemCls := FALSE;
+CFG_PadTrnCtrlCfg.PEnClsCmdInd := TRUE;
+CFG_PadTrnCtrlCfg.PEnClsCmdMon := TRUE;
+CFG_PadTrnCtrlCfg.PEnTrnLnCls := FALSE;
+CFG_PadTrnCtrlCfg.PEnClctSwDoorLoop := TRUE;
+CFG_PadTrnCtrlCfg.PEnClctHWDoorLoop := TRUE;
+CFG_PadTrnCtrlCfg.PCSetDrsClsdLckd := BYTE#2#00000001;(* door loop *)
+CFG_PadTrnCtrlCfg.PEnPTDrLpDiscrpTm := TIME#1S;
+CFG_PadTrnCtrlCfg.PEnCabDrInLoop := TRUE;
+CFG_PadTrnCtrlCfg.PEnStpsInLoop := FALSE;
+CFG_PadTrnCtrlCfg.PEnDiLocSnd := FALSE;
+CFG_PadTrnCtrlCfg.PEnDiOpnOut := FALSE;
+CFG_PadTrnCtrlCfg.PEnStpCtrl := FALSE;
+CFG_PadTrnCtrlCfg.PEnLckFirst := FALSE;
+CFG_PadTrnCtrlCfg.PEnLckLast := FALSE;
+CFG_PadTrnCtrlCfg.PEnPreRel := FALSE;
+CFG_PadTrnCtrlCfg.PEnSideSel := TRUE;
+CFG_PadTrnCtrlCfg.PEnSideSelAtc := USINT#1; (*allow mode*)
+CFG_PadTrnCtrlCfg.PEnEmAcsMon := TRUE;
+CFG_PadTrnCtrlCfg.PEnEmEgrMon := TRUE;
+CFG_PadTrnCtrlCfg.PEnEmAcsInd := TRUE;
+CFG_PadTrnCtrlCfg.PEnEmEgrInd := TRUE;
+CFG_PadTrnCtrlCfg.PConsiderHwGLD := FALSE;
+CFG_PadTrnCtrlCfg.PConsiderSwGLD := FALSE;
+CFG_PadTrnCtrlCfg.PCrushProt := UINT#10000;
+CFG_PadTrnCtrlCfg.PTCrushProt := TIME#10S;
+CFG_PadTrnCtrlCfg.PCrushProtEnRls := FALSE;
+CFG_PadTrnCtrlCfg.PCrushProtUncond := FALSE;
+CFG_PadTrnCtrlCfg.PTOpnIntDrs := TIME#2S;
+CFG_PadTrnCtrlCfg.PSpeedPreRelMin := UINT#5;
+CFG_PadTrnCtrlCfg.PSpeedPreRelMax := UINT#50;
+CFG_PadTrnCtrlCfg.PSpeedRelMin := UINT#5;
+
+CFG_PadTrnCtrlCfg.PSpeedSideSelMin := UINT#5;
+CFG_PadTrnCtrlCfg.PSpeedSideSelMax := UINT#50;
+CFG_PadTrnCtrlCfg.PSpeedOpnMin := UINT#5;
+CFG_PadTrnCtrlCfg.PEnDiRls := TRUE;
+CFG_PadTrnCtrlCfg.PCSetDrsDiRlsTrnCond := BYTE#0;
+CFG_PadTrnCtrlCfg.PTBusCmdMin := TIME#2000ms;
+CFG_PadTrnCtrlCfg.PEnObstacleDrv := FALSE;
+CFG_PadTrnCtrlCfg.PSpeedOpnLocal := UINT#0;
+CFG_PadTrnCtrlCfg.PEnOpSideStat := FALSE;
+(*@KEY@: END_WORKSHEET *)
+END_PROGRAM
+]]></iec-data>
+ <interface>
+  <variable-group name="OUT">
+   <variable name="CFG_PadTrnCtrlCfg" array-size="1" type="PadGTrnCtrlCfg" usage="output">
+    <comment><![CDATA[configuration information for the train controller]]></comment>
+   </variable>
+  </variable-group>
+ </interface>
+</pou>
