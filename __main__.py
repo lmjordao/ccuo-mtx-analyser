@@ -16,7 +16,7 @@ import json
 import logging
 import time
 
-from booking_list.booking_list_factory import BookingListFactory
+from xlss_related.booking_list.booking_list_factory import BookingListFactory
 
 """
 TODO: Contagem das diferenças dos sinais entre projectos
@@ -33,14 +33,10 @@ Check output spreadsheet
   [ f.path for f in os.scandir(folder) if f.is_dir()]
 """
 
-from config.config_loader import ConfigLoader
 # from comp.comp_values import comp_values
 # from model.ccuo_project_data import CcuoProjectData
 # from xlsx_exporter import XLSXExporter
 from definitions import BOOKING_LIST_DEFINITIONS
-
-import os.path
-from os import path
 
 EXPORT_FILENAME = 'export'
 

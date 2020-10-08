@@ -1,7 +1,7 @@
 """
 
 """
-from mtx.mtx_file_parser import MtxFileParser
+from tcms_related.mtx.mtx_file_parser import MtxFileParser
 
 
 class SignalBinding(MtxFileParser):

@@ -3,8 +3,8 @@
 """
 import os
 
-from config.config_properties import ConfigProperties
-from mtx.signal_binding import SignalBinding
+from tcms_related.config.config_properties import ConfigProperties
+from tcms_related.mtx.signal_binding import SignalBinding
 
 
 class CcuoProjectData:

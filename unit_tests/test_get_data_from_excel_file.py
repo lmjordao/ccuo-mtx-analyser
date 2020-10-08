@@ -1,7 +1,7 @@
 """
 
 """
-from booking_list.ip_booking_list import IPBookingList
+from xlss_related.booking_list import IPBookingList
 
 xls_loc = "..\\dimensions\\Realisation\\SIL0\\03 Architecture & Design\\C_Communication" \
           "\\3EST000237-0050 LOT TCMS IP Booking List.xlsm"

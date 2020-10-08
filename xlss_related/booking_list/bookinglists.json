@@ -1,0 +1,19 @@
+{
+  "books" : [
+    {
+      "name" : "booking list name (this is an example)",
+      "filename" : "path to booking list",
+      "type" : "ip, tdr, etc, etc",
+      "min-offset" : 5,
+      "max-offset" : 10
+    },
+    {
+      "name" : "AVENTRA IP Booking List",
+      "filename" : "3EST000237-4392 AVENTRA TCMS IP Booking List.xlsm",
+      "type" : "ip",
+      "min-offset" : 5,
+      "max-offset" : 63
+    }
+  ]
+}
+

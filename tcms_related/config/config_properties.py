@@ -1,7 +1,7 @@
 """
 
 """
-from config.config_loader import ConfigLoader
+from tcms_related.config.config_loader import ConfigLoader
 
 
 class ConfigProperties:

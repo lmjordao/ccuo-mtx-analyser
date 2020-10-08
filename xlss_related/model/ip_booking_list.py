@@ -3,7 +3,7 @@
 """
 import xlrd
 
-from model.xls_booking_list import XLSBookingList
+from xlss_related.model.xls_booking_list import XLSBookingList
 
 
 class IPBookingList(XLSBookingList):
